@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>DataRecicla | Gestão Completa de Coleta e Reciclagem</title>
+  <!-- TailwindCSS + Font Awesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Firebase SDKs (modular) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // ==================== CONFIGURAÇÃO DO FIREBASE ====================
+    // SUBSTITUA OS VALORES ABAIXO PELOS DADOS DO SEU PROJETO FIREBASE
+    const firebaseConfig = {
+      apiKey: "AIzaSyB2kl5dWz8z8yqoB-TEoW6ptXh_g08eLtI",
+      authDomain: "datarecicla.firebaseapp.com",
+      projectId: "datarecicla",
+      storageBucket: "datarecicla.firebasestorage.app",
+      messagingSenderId: "624111550531",
+      appId: "1:624111550531:web:c2615ac8942204817694f6"
+    };
+    // =================================================================
+
+    // Inicializar Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Elementos da interface
+    const loginScreen = document.getElementById("loginScreen");
+    const appPanel = document.getElementById("appPanel");
+    const emailInput = document.getElementById("emailLoginInput");
+    const passwordInput = document.getElementById("passwordLoginInput");
+    const btnAcessar = document.getElementById("btnAcessar");
+    const btnCadastrar = document.getElementById("btnCadastrar");
+    const loginErrorMessage = document.getElementById("loginErrorMessage");
+    const logoutBtn = document.getElementById("logoutBtnGlobal");
+    const userEmailHeader = document.getElementById("userEmailHeader");
+    const empresaNomeHeader = document.getElementById("empresaNomeHeader");
+    const companyNameDisplay = document.getElementById("companyNameDisplay");
+    const editCompanyBtn = document.getElementById("editCompanyBtn");
+    const formColeta = document.getElementById("formColeta");
+    
+    // Campos do formulário - Seção 1
+    const origemResiduo = document.getElementById("origemResiduo");
+    const gerador = document.getElementById("gerador");
+    const operadorCatador = document.getElementById("operadorCatador");
+    const gpsLat = document.getElementById("gpsLat");
+    const gpsLng = document.getElementById("gpsLng");
+    const getLocationBtn = document.getElementById("getLocationBtn");
+    
+    // Seção 2
+    const pesoBruto = document.getElementById("pesoBruto");
+    const pesoLiquido = document.getElementById("pesoLiquido");
+    const materialSelect = document.getElementById("materialSelect");
+    const subcategoria = document.getElementById("subcategoria");
+    const indiceRejeito = document.getElementById("indiceRejeito");
+    const volumeOcupacao = document.getElementById("volumeOcupacao");
+    
+    // Seção 3
+    const horaInicio = document.getElementById("horaInicio");
+    const horaTermino = document.getElementById("horaTermino");
+    const quilometragem = document.getElementById("quilometragem");
+    const consumoCombustivel = document.getElementById("consumoCombustivel");
+    const frequenciaColeta = document.getElementById("frequenciaColeta");
+    
+    // Seção 4
+    const precoVenda = document.getElementById("precoVenda");
+    const custoOperacional = document.getElementById("custoOperacional");
+    const mtr = document.getElementById("mtr");
+    const cdf = document.getElementById("cdf");
+    
+    const btnSubmitRecord = document.getElementById("btnSubmitRecord");
+    const btnCancelEdit = document.getElementById("btnCancelEdit");
+    const tabelaRegistrosBody = document.getElementById("tabelaRegistrosBody");
+    const statTotalKg = document.getElementById("statTotalKg");
+    const statTotalRecords = document.getElementById("statTotalRecords");
+    const statReceitaTotal = document.getElementById("statReceitaTotal");
+    const statLucroEstimado = document.getElementById("statLucroEstimado");
+
+    let currentUser = null;
+    let currentRecords = [];
+    let editMode = false;
+    let editRecordId = null;
+
+    function getEmpresaDocRef(uid) {
+      return doc(db, "empresas", uid);
+    }
+
+    async function loadEmpresaData(uid) {
+      const docRef = getEmpresaDocRef(uid);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        return {
+          profile: data.profile || { companyName: "Minha Recicladora" },
+          records: data.records || []
+        };
+      } else {
+        const defaultData = {
+          profile: { companyName: "Minha Recicladora" },
+          records: []
+        };
+        await setDoc(docRef, defaultData);
+        return defaultData;
+      }
+    }
+
+    async function updateEmpresaProfile(uid, newProfile) {
+      const docRef = getEmpresaDocRef(uid);
+      await updateDoc(docRef, { profile: newProfile });
+    }
+
+    async function addRecord(uid, record) {
+      const docRef = getEmpresaDocRef(uid);
+      const newRecord = { ...record, id: Date.now().toString() };
+      await updateDoc(docRef, { records: arrayUnion(newRecord) });
+      return newRecord;
+    }
+
+    async function updateRecord(uid, oldRecordId, updatedRecord) {
+      const docRef = getEmpresaDocRef(uid);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        let records = docSnap.data().records || [];
+        const index = records.findIndex(r => r.id === oldRecordId);
+        if (index !== -1) {
+          records[index] = { ...updatedRecord, id: oldRecordId };
+          await updateDoc(docRef, { records: records });
+        }
+      }
+    }
+
+    async function deleteRecord(uid, recordId) {
+      const docRef = getEmpresaDocRef(uid);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        let records = docSnap.data().records || [];
+        const recordToDelete = records.find(r => r.id === recordId);
+        if (recordToDelete) {
+          await updateDoc(docRef, { records: arrayRemove(recordToDelete) });
+        }
+      }
+    }
+
+    function getSubcategorias(material) {
+      const subMap = {
+        "Plástico": ["PET", "PEAD", "PEBD", "PP", "PVC", "Outros Plásticos"],
+        "Papel/Papelão": ["Papelão", "Papel Branco", "Papel Misturado", "Jornais/Revistas"],
+        "Vidro": ["Vidro Transparente", "Vidro Âmbar", "Vidro Verde", "Outros Vidros"],
+        "Metal": ["Alumínio", "Aço", "Cobre", "Latas", "Sucata Ferrosa"],
+        "Eletrônicos": ["Placas", "Fios", "Baterias", "Eletrodomésticos"],
+        "Orgânico": ["Restos de Alimentos", "Podas", "Resíduos Verdes"],
+        "Outros": ["Borrachas", "Têxteis", "Madeira", "Gesso"]
+      };
+      return subMap[material] || [];
+    }
+
+    function updateSubcategorias() {
+      const material = materialSelect.value;
+      const subSelect = subcategoria;
+      subSelect.innerHTML = '<option value="">Selecionar subcategoria</option>';
+      if (material) {
+        getSubcategorias(material).forEach(sub => {
+          const option = document.createElement("option");
+          option.value = sub;
+          option.textContent = sub;
+          subSelect.appendChild(option);
+        });
+      }
+    }
+
+    function renderDashboard(records) {
+      const totalKg = records.reduce((acc, r) => acc + (parseFloat(r.pesoLiquido) || 0), 0);
+      const totalRegistros = records.length;
+      const receitaTotal = records.reduce((acc, r) => acc + ((parseFloat(r.precoVenda) || 0) * (parseFloat(r.pesoLiquido) || 0)), 0);
+      const custoTotal = records.reduce((acc, r) => acc + ((parseFloat(r.custoOperacional) || 0) * (parseFloat(r.pesoLiquido) || 0)), 0);
+      const lucroEstimado = receitaTotal - custoTotal;
+
+      statTotalKg.innerHTML = `${totalKg.toFixed(2)} kg`;
+      statTotalRecords.innerText = totalRegistros;
+      statReceitaTotal.innerHTML = `R$ ${receitaTotal.toFixed(2)}`;
+      statLucroEstimado.innerHTML = `R$ ${lucroEstimado.toFixed(2)}`;
+
+      if (!records.length) {
+        tabelaRegistrosBody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-gray-400"><i class="fas fa-leaf mr-2"></i> Nenhuma coleta registrada. Comece agora!</td></tr>`;
+        return;
+      }
+      tabelaRegistrosBody.innerHTML = "";
+      records.forEach(record => {
+        const row = tabelaRegistrosBody.insertRow();
+        row.className = "table-row-hover transition cursor-pointer";
+        row.insertCell(0).innerHTML = `<span class="font-medium">${escapeHtml(record.gerador || "—")}</span>`;
+        row.insertCell(1).innerHTML = `<span class="font-medium flex items-center gap-1"><i class="fas fa-cube text-green-500 text-xs"></i> ${escapeHtml(record.material)}${record.subcategoria ? ` (${record.subcategoria})` : ''}</span>`;
+        row.insertCell(2).innerHTML = `<strong>${parseFloat(record.pesoLiquido || 0).toFixed(2)}</strong> kg`;
+        row.insertCell(3).innerHTML = record.dataColeta || "—";
+        row.insertCell(4).innerHTML = `${escapeHtml(record.origemResiduo || "")} ${record.localColeta ? `· ${record.localColeta}` : ''}`;
+        const cellAcoes = row.insertCell(5);
+        cellAcoes.className = "text-center whitespace-nowrap";
+        cellAcoes.innerHTML = `
+          <button class="editBtn bg-blue-50 hover:bg-blue-100 text-blue-700 px-2 py-1 rounded-lg mx-1 transition" data-id="${record.id}"><i class="fas fa-pencil-alt"></i></button>
+          <button class="deleteBtn bg-red-50 hover:bg-red-100 text-red-600 px-2 py-1 rounded-lg mx-1 transition" data-id="${record.id}"><i class="fas fa-trash"></i></button>
+        `;
+        // Clique na linha para ver detalhes
+        row.addEventListener("click", (e) => {
+          if (e.target.tagName !== 'BUTTON') {
+            showRecordDetails(record);
+          }
+        });
+      });
+      document.querySelectorAll(".editBtn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const id = btn.getAttribute("data-id");
+          const record = records.find(r => r.id === id);
+          if (record) openEditRecord(record);
+        });
+      });
+      document.querySelectorAll(".deleteBtn").forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const id = btn.getAttribute("data-id");
+          if (confirm("Excluir este registro de coleta permanentemente?")) {
+            await deleteRecord(currentUser.uid, id);
+            await refreshUserData();
+          }
+        });
+      });
+    }
+
+    function showRecordDetails(record) {
+      alert(`
+📋 DETALHES DA COLETA
+
+🏷️ IDENTIFICAÇÃO:
+Origem: ${record.origemResiduo || "—"}
+Gerador: ${record.gerador || "—"}
+Operador: ${record.operadorCatador || "—"}
+Local: ${record.localColeta || "—"}
+GPS: ${record.gpsLat && record.gpsLng ? `${record.gpsLat}, ${record.gpsLng}` : "—"}
+
+⚖️ QUANTITATIVO:
+Material: ${record.material} ${record.subcategoria ? `(${record.subcategoria})` : ''}
+Peso Bruto: ${record.pesoBruto || 0} kg
+Peso Líquido: ${record.pesoLiquido || 0} kg
+Rejeito: ${record.indiceRejeito || 0} kg
+Ocupação Volume: ${record.volumeOcupacao || 0}%
+
+🚛 LOGÍSTICA:
+Início: ${record.horaInicio || "—"}  |  Término: ${record.horaTermino || "—"}
+Quilometragem: ${record.quilometragem || 0} km
+Combustível: ${record.consumoCombustivel || 0} L
+Frequência: ${record.frequenciaColeta || "—"}
+
+💰 FINANCEIRO:
+Preço Venda: R$ ${record.precoVenda || 0}/kg
+Custo Operacional: R$ ${record.custoOperacional || 0}/kg
+MTR: ${record.mtr || "—"}
+CDF: ${record.cdf || "—"}
+
+📅 Data da coleta: ${record.dataColeta || "—"}
+      `);
+    }
+
+    function openEditRecord(record) {
+      // Preencher todos os campos
+      origemResiduo.value = record.origemResiduo || "";
+      gerador.value = record.gerador || "";
+      operadorCatador.value = record.operadorCatador || "";
+      gpsLat.value = record.gpsLat || "";
+      gpsLng.value = record.gpsLng || "";
+      pesoBruto.value = record.pesoBruto || "";
+      pesoLiquido.value = record.pesoLiquido || "";
+      materialSelect.value = record.material || "";
+      updateSubcategorias();
+      subcategoria.value = record.subcategoria || "";
+      indiceRejeito.value = record.indiceRejeito || "";
+      volumeOcupacao.value = record.volumeOcupacao || "";
+      horaInicio.value = record.horaInicio || "";
+      horaTermino.value = record.horaTermino || "";
+      quilometragem.value = record.quilometragem || "";
+      consumoCombustivel.value = record.consumoCombustivel || "";
+      frequenciaColeta.value = record.frequenciaColeta || "";
+      precoVenda.value = record.precoVenda || "";
+      custoOperacional.value = record.custoOperacional || "";
+      mtr.value = record.mtr || "";
+      cdf.value = record.cdf || "";
+      dataColeta.value = record.dataColeta || "";
+      localColeta.value = record.localColeta || "";
+      obsColeta.value = record.notes || "";
+
+      editMode = true;
+      editRecordId = record.id;
+      btnSubmitRecord.innerHTML = '<i class="fas fa-sync-alt"></i> Atualizar coleta';
+      btnSubmitRecord.classList.add("bg-amber-600", "hover:bg-amber-700");
+      btnSubmitRecord.classList.remove("bg-green-600", "hover:bg-green-700");
+      btnCancelEdit.classList.remove("hidden");
+      btnCancelEdit.classList.add("flex");
+      window.scrollTo({ top: formColeta.offsetTop - 100, behavior: "smooth" });
+    }
+
+    function resetForm() {
+      formColeta.reset();
+      materialSelect.value = "";
+      updateSubcategorias();
+      const today = new Date().toISOString().slice(0,10);
+      dataColeta.value = today;
+      editMode = false;
+      editRecordId = null;
+      btnSubmitRecord.innerHTML = '<i class="fas fa-save"></i> Adicionar registro';
+      btnSubmitRecord.classList.remove("bg-amber-600", "hover:bg-amber-700");
+      btnSubmitRecord.classList.add("bg-green-600", "hover:bg-green-700");
+      btnCancelEdit.classList.add("hidden");
+      btnCancelEdit.classList.remove("flex");
+    }
+
+    async function refreshUserData() {
+      if (!currentUser) return;
+      const data = await loadEmpresaData(currentUser.uid);
+      currentRecords = data.records;
+      const profile = data.profile;
+      userEmailHeader.innerText = currentUser.email;
+      const companyName = profile.companyName || "Recicladora";
+      empresaNomeHeader.innerText = companyName.length > 20 ? companyName.slice(0,18)+".." : companyName;
+      companyNameDisplay.innerHTML = `<span class="text-green-600">${escapeHtml(companyName)}</span>`;
+      renderDashboard(currentRecords);
+    }
+
+    formColeta.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!currentUser) return;
+
+      const recordData = {
+        origemResiduo: origemResiduo.value,
+        gerador: gerador.value,
+        operadorCatador: operadorCatador.value,
+        gpsLat: gpsLat.value,
+        gpsLng: gpsLng.value,
+        pesoBruto: parseFloat(pesoBruto.value) || 0,
+        pesoLiquido: parseFloat(pesoLiquido.value) || 0,
+        material: materialSelect.value,
+        subcategoria: subcategoria.value,
+        indiceRejeito: parseFloat(indiceRejeito.value) || 0,
+        volumeOcupacao: parseFloat(volumeOcupacao.value) || 0,
+        horaInicio: horaInicio.value,
+        horaTermino: horaTermino.value,
+        quilometragem: parseFloat(quilometragem.value) || 0,
+        consumoCombustivel: parseFloat(consumoCombustivel.value) || 0,
+        frequenciaColeta: frequenciaColeta.value,
+        precoVenda: parseFloat(precoVenda.value) || 0,
+        custoOperacional: parseFloat(custoOperacional.value) || 0,
+        mtr: mtr.value,
+        cdf: cdf.value,
+        dataColeta: dataColeta.value,
+        localColeta: localColeta.value,
+        notes: obsColeta.value
+      };
+
+      if (!recordData.material) { alert("Selecione o tipo de material."); return; }
+      if (recordData.pesoLiquido <= 0) { alert("Insira um peso líquido válido."); return; }
+      if (!recordData.dataColeta) { alert("Informe a data da coleta."); return; }
+
+      if (editMode && editRecordId) {
+        await updateRecord(currentUser.uid, editRecordId, recordData);
+        resetForm();
+        await refreshUserData();
+      } else {
+        await addRecord(currentUser.uid, recordData);
+        resetForm();
+        await refreshUserData();
+      }
+    });
+
+    btnCancelEdit.addEventListener("click", resetForm);
+    editCompanyBtn.addEventListener("click", async () => {
+      if (!currentUser) return;
+      const currentName = (await loadEmpresaData(currentUser.uid)).profile.companyName;
+      const newName = prompt("✏️ Editar nome da empresa de reciclagem:", currentName);
+      if (newName && newName.trim() !== "") {
+        await updateEmpresaProfile(currentUser.uid, { companyName: newName.trim() });
+        await refreshUserData();
+      }
+    });
+    logoutBtn.addEventListener("click", async () => { await signOut(auth); });
+
+    // Geolocalização
+    getLocationBtn.addEventListener("click", () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            gpsLat.value = position.coords.latitude.toFixed(6);
+            gpsLng.value = position.coords.longitude.toFixed(6);
+          },
+          (error) => {
+            alert("Erro ao obter localização: " + error.message);
+          }
+        );
+      } else {
+        alert("Geolocalização não suportada neste navegador.");
+      }
+    });
+
+    async function handleAuth(isSignUp = false) {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value.trim();
+      if (!email || !password) {
+        loginErrorMessage.innerText = "Preencha e-mail e senha.";
+        return;
+      }
+      if (password.length < 6 && isSignUp) {
+        loginErrorMessage.innerText = "A senha deve ter pelo menos 6 caracteres.";
+        return;
+      }
+      try {
+        if (isSignUp) {
+          await createUserWithEmailAndPassword(auth, email, password);
+          loginErrorMessage.innerText = "Cadastro realizado! Redirecionando...";
+        } else {
+          await signInWithEmailAndPassword(auth, email, password);
+        }
+      } catch (error) {
+        if (error.code === 'auth/user-not-found') loginErrorMessage.innerText = "Usuário não encontrado. Clique em 'Criar conta' para cadastrar.";
+        else if (error.code === 'auth/wrong-password') loginErrorMessage.innerText = "Senha incorreta.";
+        else if (error.code === 'auth/email-already-in-use') loginErrorMessage.innerText = "E-mail já cadastrado. Faça login.";
+        else loginErrorMessage.innerText = "Erro: " + error.message;
+      }
+    }
+
+    btnAcessar.addEventListener("click", () => handleAuth(false));
+    btnCadastrar.addEventListener("click", () => handleAuth(true));
+    emailInput.addEventListener("keypress", (e) => { if (e.key === "Enter") handleAuth(false); });
+    passwordInput.addEventListener("keypress", (e) => { if (e.key === "Enter") handleAuth(false); });
+    materialSelect.addEventListener("change", updateSubcategorias);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        loginScreen.classList.add("hidden");
+        appPanel.classList.remove("hidden");
+        await refreshUserData();
+      } else {
+        currentUser = null;
+        loginScreen.classList.remove("hidden");
+        appPanel.classList.add("hidden");
+        resetForm();
+        emailInput.value = "";
+        passwordInput.value = "";
+        loginErrorMessage.innerText = "";
+      }
+    });
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+      });
+    }
+
+    const today = new Date().toISOString().slice(0,10);
+    dataColeta.value = today;
+  </script>
+  <style>
+    body {
+      background: linear-gradient(145deg, #e9f5ef 0%, #d4e9df 100%);
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, sans-serif;
+    }
+    .card-glossy { background: rgba(255, 255, 255, 0.92); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .card-glossy:hover { transform: translateY(-3px); box-shadow: 0 20px 25px -12px rgba(0, 0, 0, 0.15); }
+    input, select, textarea { transition: all 0.2s; }
+    input:focus, select:focus, textarea:focus { box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2); border-color: #22c55e; outline: none; }
+    .table-row-hover:hover { background-color: #f9fafb; }
+    .section-title { background: #f0fdf4; border-left: 4px solid #22c55e; padding: 8px 12px; margin-bottom: 16px; border-radius: 8px; font-weight: 600; color: #166534; }
+  </style>
+</head>
+<body class="antialiased">
+  <!-- TELA DE CADASTRO / LOGIN -->
+  <div id="loginScreen" class="min-h-screen flex items-center justify-center p-5">
+    <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden card-glossy border border-green-100">
+      <div class="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-8 text-center">
+        <i class="fas fa-chart-line text-5xl text-white drop-shadow-md mb-2"></i>
+        <h1 class="text-3xl font-bold text-white tracking-tight">DataRecicla</h1>
+        <p class="text-green-100 text-sm mt-1">Gestão inteligente de coleta e reciclagem</p>
+      </div>
+      <div class="p-7">
+        <div class="mb-4"><label class="block text-gray-700 font-semibold mb-2"><i class="far fa-envelope mr-2 text-green-600"></i>E-mail</label><input type="email" id="emailLoginInput" class="w-full border border-gray-300 rounded-xl px-4 py-3"></div>
+        <div class="mb-6"><label class="block text-gray-700 font-semibold mb-2"><i class="fas fa-lock mr-2 text-green-600"></i>Senha</label><input type="password" id="passwordLoginInput" class="w-full border border-gray-300 rounded-xl px-4 py-3"><p class="text-xs text-gray-500 mt-2">Mínimo 6 caracteres.</p></div>
+        <div class="flex flex-col gap-3">
+          <button id="btnAcessar" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-md transition flex items-center justify-center gap-2"><i class="fas fa-sign-in-alt"></i> Entrar</button>
+          <button id="btnCadastrar" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded-xl shadow-sm transition flex items-center justify-center gap-2"><i class="fas fa-user-plus"></i> Criar nova conta</button>
+        </div>
+        <div id="loginErrorMessage" class="text-red-500 text-sm text-center mt-4 min-h-[2rem]"></div>
+        <div class="mt-6 text-center text-gray-400 text-xs border-t pt-4"><i class="fas fa-database"></i> Dados protegidos no Firebase</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAINEL PRINCIPAL -->
+  <div id="appPanel" class="hidden min-h-screen bg-gray-50/90">
+    <header class="bg-white shadow-md sticky top-0 z-20 border-b border-green-100">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap justify-between items-center gap-3">
+        <div class="flex items-center gap-3"><div class="bg-green-100 p-2 rounded-full"><i class="fas fa-chart-line text-green-700 text-xl"></i></div><div><h1 class="text-xl font-extrabold text-gray-800">DataRecicla<span class="text-green-600 text-sm ml-1">📊</span></h1></div></div>
+        <div class="flex items-center gap-4">
+          <div class="hidden md:flex items-center bg-gray-100 rounded-full px-3 py-1.5 gap-2"><i class="far fa-building text-green-700"></i><span id="empresaNomeHeader" class="text-sm font-medium text-gray-700">Empresa</span></div>
+          <div class="flex items-center gap-2 bg-gray-50 rounded-full px-3 py-1.5"><i class="far fa-envelope text-gray-500"></i><span id="userEmailHeader" class="text-sm text-gray-700 truncate max-w-[150px]"></span></div>
+          <button id="logoutBtnGlobal" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-full transition flex items-center gap-1 text-sm font-medium"><i class="fas fa-sign-out-alt"></i> Sair</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-7 flex flex-wrap justify-between items-center gap-4">
+        <div><p class="text-xs uppercase tracking-wide text-green-600 font-semibold"><i class="fas fa-industry mr-1"></i> Empresa de reciclagem</p><h2 id="companyNameDisplay" class="text-2xl md:text-3xl font-bold text-gray-800"></h2></div>
+        <button id="editCompanyBtn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl transition text-sm font-medium flex items-center gap-2"><i class="fas fa-pen-alt text-green-600"></i> Editar nome</button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-5 mb-7">
+        <div class="bg-white rounded-2xl shadow-sm p-4 flex items-center gap-4 border-l-8 border-green-500"><div class="bg-green-100 p-3 rounded-full"><i class="fas fa-weight-hanging text-green-700 text-xl"></i></div><div><p class="text-gray-500 text-sm font-medium">Total Coletado</p><p id="statTotalKg" class="text-2xl font-black text-gray-800">0 kg</p></div></div>
+        <div class="bg-white rounded-2xl shadow-sm p-4 flex items-center gap-4 border-l-8 border-emerald-500"><div class="bg-emerald-100 p-3 rounded-full"><i class="fas fa-boxes text-emerald-700 text-xl"></i></div><div><p class="text-gray-500 text-sm font-medium">Registros</p><p id="statTotalRecords" class="text-2xl font-black text-gray-800">0</p></div></div>
+        <div class="bg-white rounded-2xl shadow-sm p-4 flex items-center gap-4 border-l-8 border-blue-500"><div class="bg-blue-100 p-3 rounded-full"><i class="fas fa-dollar-sign text-blue-700 text-xl"></i></div><div><p class="text-gray-500 text-sm font-medium">Receita Total</p><p id="statReceitaTotal" class="text-2xl font-black text-gray-800">R$ 0,00</p></div></div>
+        <div class="bg-white rounded-2xl shadow-sm p-4 flex items-center gap-4 border-l-8 border-purple-500"><div class="bg-purple-100 p-3 rounded-full"><i class="fas fa-chart-line text-purple-700 text-xl"></i></div><div><p class="text-gray-500 text-sm font-medium">Lucro Estimado</p><p id="statLucroEstimado" class="text-2xl font-black text-gray-800">R$ 0,00</p></div></div>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-md p-5 mb-8 border border-gray-100">
+        <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 border-b pb-2"><i class="fas fa-truck-fast text-green-600"></i> Registrar nova coleta</h3>
+        <form id="formColeta" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <!-- Seção 1: Identificação -->
+          <div class="md:col-span-2 section-title"><i class="fas fa-id-card mr-2"></i> 1. Dados de Identificação</div>
+          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Origem do Resíduo</label><select id="origemResiduo" class="w-full border border-gray-300 rounded-xl px-3 py-2.5"><option value="">Selecione</option><option value="Residencial">Residencial</option><option value="Comercial">Comercial</option><option value="Industrial">Industrial</option><option value="Ecoponto">Ecoponto</option></select></div>
+          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Gerador (Empresa/Condomínio)</label><input type="text" id="gerador" class="w-full border border-gray-300 rounded-xl px-3 py-2.5"></div>
+          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Operador/Catador</label><input type="text" id="operadorCatador" class="w-full border border-gray-300 rounded-xl px-3 py-2.5"></div>
+          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Geolocalização (GPS)</label><div class="flex gap-2"><input type="text" id="gpsLat" placeholder="Latitude" class="w-1/2 border rounded-xl px-3 py-2.5"><input type="text" id="gpsLng" placeholder="Longitude" class="w-1/2 border rounded-xl px-3 py-2.5"><button type="button" id="getLocationBtn" class="bg-gray-200 px-3 rounded-xl"><i class="fas fa-map-marker-alt"></i></button></div></div>
+
+          <!-- Seção 2: Quantitativos -->
+          <div class="md:col-span-2 section-title mt-2"><i class="fas fa-chart-pie mr-2"></i> 2. Dados Quantitativos e Qualitativos</div>
+          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Peso Bruto (kg)</label><input type="number" step="0.01" id="pesoBruto" class="w-full border rounded-xl px-3 py-2.5"></div>
+          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Peso Líquido (kg) *</label><input type="number" step="0.01" id="pesoLiquido" class="w-full border rounded-xl px-3 py-2.5" required></div>
+          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Material *</label><select id="materialSelect" class="w-full border rounded-xl px-3 py-2.5"><option value="">Selecionar</option><option value="Plástico">Plástico</option><option value="Papel/Papelão">Papel/Papelão</option><option value="Vidro">Vidro</option><option value="Metal">Metal</option><option value="Eletrônicos">Eletrônicos</option><option value="Orgânico">Orgânico</option><option value="Outros">Outros</option></select></div>
+          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Subcategoria</label><select id="subcategoria" class="w-full border rounded-xl px-3 py-2.5"><option value="">Selecionar subcategoria</option></select></div>
+          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Índice de Rejeito (kg)</label><input type="number" step="0.01" id="indiceRejeito" class="w-full border rounded-xl px-3 py-2.5"></div>
+          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Volume Ocupação (%)</label><input type="number" step="1" id="volumeOcupacao" class="w-full border rounded-xl px-3 py-2.5"></div>
+
+          <!-- Seção 3: Logística -->
+          <div class="md:col-span-2 section-title mt-2"><i class="fas fa-truck mr-2"></i> 3. Dados Logísticos e Operacionais</div>
+          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Horário Início</label><input type="time" id="horaInicio" class="w-full border rounded-xl px-3 py-2.5"></div>
+          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Horário Término</label><input type="time" id="horaTermino" class="w-full border rounded-xl px-3 py-2.5"></div>
+          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Quilometragem (km)</label><input type="number" step="0.1" id="quilometragem" class="w-full border rounded-xl px-3 py-2.5"></div>
+          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Consumo Combustível (L)</label><input type="number" step="0.1" id="consumoCombustivel" class="w-full border rounded-xl px-3 py-2.5"></div>
+          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Frequência de Coleta</label><input type="text" id="frequenciaColeta" placeholder="Ex: 2x/semana" class="w-full border rounded-xl px-3 py-2.5"></div>
+
+          <!-- Seção 4: Financeiro e Conformidade -->
+          <div class="md:col-span-2 section-title mt-2"><i class="fas fa-chart-line mr-2"></i> 4. Dados Financeiros e de Conformidade</div>
+          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Preço de Venda (R$/kg)</label><input type="number" step="0.01" id="precoVenda" class="w-full border rounded-xl px-3 py-2.5"></div>
+          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Custo Operacional Unitário (R$/kg)</label><input type="number" step="0.01" id="custoOperacional" class="w-full border rounded-xl px-3 py-2.5"></div>
+          <div><label class="block text-gray-700 font-semibold text-sm mb-1">MTR (Manifesto)</label><input type="text" id="mtr" class="w-full border rounded-xl px-3 py-2.5"></div>
+          <div><label class="block text-gray-700 font-semibold text-sm mb-1">CDF (Certificado Destinação)</label><input type="text" id="cdf" class="w-full border rounded-xl px-3 py-2.5"></div>
+
+          <!-- Campos auxiliares -->
+          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Data da Coleta *</label><input type="date" id="dataColeta" class="w-full border rounded-xl px-3 py-2.5"></div>
+          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Local (endereço)</label><input type="text" id="localColeta" class="w-full border rounded-xl px-3 py-2.5"></div>
+          <div class="md:col-span-2"><label class="block text-gray-700 font-semibold text-sm mb-1">Observações</label><textarea id="obsColeta" rows="2" class="w-full border rounded-xl px-3 py-2.5"></textarea></div>
+
+          <div class="md:col-span-2 flex gap-3">
+            <button type="submit" id="btnSubmitRecord" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-xl shadow-sm transition flex items-center gap-2 font-medium"><i class="fas fa-save"></i> Adicionar registro</button>
+            <button type="button" id="btnCancelEdit" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2.5 rounded-xl transition hidden items-center gap-2"><i class="fas fa-times-circle"></i> Cancelar edição</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100">
+        <div class="bg-gray-50 px-5 py-3 border-b flex justify-between items-center"><h3 class="font-bold text-gray-700"><i class="fas fa-database text-green-600 mr-2"></i> Histórico de coletas</h3><span class="text-xs text-gray-400">Clique na linha para ver detalhes</span></div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50 text-gray-600 text-xs uppercase font-semibold"><tr><th class="px-4 py-3 text-left">Gerador</th><th class="px-4 py-3 text-left">Material</th><th class="px-4 py-3 text-left">Peso Líq (kg)</th><th class="px-4 py-3 text-left">Data</th><th class="px-4 py-3 text-left">Local/Origem</th><th class="px-4 py-3 text-center">Ações</th></tr></thead>
+            <tbody id="tabelaRegistrosBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+    <footer class="text-center text-gray-400 text-xs py-6 mt-4 border-t border-gray-200"><i class="fas fa-chart-line"></i> DataRecicla · Gestão completa com Firebase</footer>
+  </div>
+</body>
+</html>
