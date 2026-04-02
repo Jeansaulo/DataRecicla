@@ -3,80 +3,402 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>DataRecicla | Gestão Completa de Coleta e Reciclagem</title>
-  <!-- TailwindCSS + Font Awesome -->
+  <title>Futuro Verde Reciclagem | Gestão de Coleta</title>
+  <!-- TailwindCSS + Font Awesome + Chart.js -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <!-- Firebase SDKs (modular) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- Custom CSS para ajustes finos -->
+  <style>
+    body {
+      background: linear-gradient(135deg, #eef5ed 0%, #d4e3d1 100%);
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
+    /* Transições suaves */
+    .transition-smooth {
+      transition: all 0.2s ease-in-out;
+    }
+    /* Cards com hover sutil */
+    .stat-card {
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+    }
+    /* Seção de título */
+    .section-title {
+      background: #eaf7ea;
+      border-left: 5px solid #2b7a3e;
+      border-radius: 12px;
+      padding: 8px 16px;
+      margin-bottom: 20px;
+      font-weight: 600;
+      color: #1e4620;
+    }
+    /* Botões de ação */
+    .btn-action {
+      transition: all 0.2s;
+    }
+    .btn-action:hover {
+      transform: scale(1.02);
+    }
+    /* Tabela responsiva */
+    .table-row-hover:hover {
+      background-color: #f9fafb;
+    }
+    /* Input focus */
+    input:focus, select:focus, textarea:focus {
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+      border-color: #2b7a3e;
+      outline: none;
+    }
+    /* Estilo para a logo (substitua por imagem futuramente) */
+    .logo-placeholder {
+      background-color: #e9f5e9;
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .logo-placeholder:hover {
+      background-color: #d4e6d4;
+      transform: scale(1.02);
+    }
+    /* Badges de período */
+    .period-badge {
+      transition: all 0.2s;
+    }
+    .period-badge input:checked + span {
+      background-color: #2b7a3e;
+      color: white;
+      border-color: #2b7a3e;
+    }
+  </style>
+</head>
+<body class="antialiased">
+
+  <!-- Tela de login / cadastro -->
+  <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden transform transition-all">
+      <div class="bg-gradient-to-r from-green-700 to-emerald-600 px-6 py-8 text-center">
+        <!-- Logo pequena na tela de login -->
+        <div class="flex justify-center mb-4">
+          <div class="logo-placeholder bg-white/20 backdrop-blur-sm w-20 h-20 rounded-full flex items-center justify-center">
+            <i class="fas fa-seedling text-4xl text-white"></i>
+          </div>
+        </div>
+        <h1 class="text-3xl font-bold text-white">DataRecicla</h1>
+        <p class="text-green-100 text-sm mt-1">Reciclagem · Sustentabilidade · Gestão</p>
+      </div>
+      <div class="p-7">
+        <input type="email" id="emailLoginInput" placeholder="E-mail" class="w-full border border-gray-200 rounded-xl px-4 py-3 mb-4 focus:border-green-500">
+        <input type="password" id="passwordLoginInput" placeholder="Senha" class="w-full border border-gray-200 rounded-xl px-4 py-3 mb-6 focus:border-green-500">
+        <div class="flex gap-3">
+          <button id="btnLogin" class="flex-1 bg-green-700 hover:bg-green-800 text-white font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2"><i class="fas fa-sign-in-alt"></i> Entrar</button>
+          <button id="btnSignup" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2"><i class="fas fa-user-plus"></i> Criar conta</button>
+        </div>
+        <div id="loginErrorMessage" class="text-red-500 text-sm text-center mt-4 min-h-[2rem]"></div>
+        <div class="mt-6 text-center text-gray-400 text-xs border-t pt-4">Sistema integrado com Firebase</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APP PRINCIPAL -->
+  <div id="appContainer" class="hidden">
+    <!-- Cabeçalho com logo -->
+    <header class="bg-white/90 backdrop-blur-sm shadow-sm sticky top-0 z-20 border-b border-green-100">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap justify-between items-center gap-3">
+        <div class="flex items-center gap-3">
+          <!-- Área da LOGO (substitua por <img> depois) -->
+          <div class="logo-placeholder w-10 h-10 sm:w-12 sm:h-12 cursor-pointer" title="Clique para trocar logo (futuramente)">
+            <i class="fas fa-seedling text-green-700 text-xl sm:text-2xl"></i>
+          </div>
+          <div>
+            <h1 class="text-xl sm:text-2xl font-extrabold text-gray-800 tracking-tight">DataRecicla <span class="text-green-600 text-sm align-top">♻️</span></h1>
+            <p class="text-xs text-gray-500 hidden sm:block">Reciclagem inteligente</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 sm:gap-4">
+          <div class="hidden md:flex items-center bg-gray-100 rounded-full px-3 py-1.5 gap-2">
+            <i class="fas fa-building text-green-600"></i>
+            <span id="empresaNomeHeader" class="text-sm font-medium">Futuro Verde Reciclagem</span>
+          </div>
+          <div class="flex items-center gap-2 bg-gray-50 rounded-full px-3 py-1.5">
+            <i class="far fa-envelope text-gray-500"></i>
+            <span id="userEmailHeader" class="text-sm text-gray-700 truncate max-w-[130px] sm:max-w-[200px]"></span>
+          </div>
+          <button id="logoutBtn" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-full transition-all text-sm font-medium flex items-center gap-1"><i class="fas fa-sign-out-alt"></i> Sair</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <!-- Tabs modernas -->
+      <div class="border-b border-gray-200 mb-8">
+        <nav class="flex space-x-6" aria-label="Tabs">
+          <button id="tabRegistro" class="tab-button py-3 px-1 border-b-2 border-green-600 text-green-700 font-semibold text-base transition-all">
+            <i class="fas fa-pencil-alt mr-2"></i>Registro de Coleta
+          </button>
+          <button id="tabAnalise" class="tab-button py-3 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-semibold text-base transition-all">
+            <i class="fas fa-chart-line mr-2"></i>Análise de Dados
+          </button>
+          <button id="tabRotas" class="tab-button py-3 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-semibold text-base transition-all">
+            <i class="fas fa-route mr-2"></i>Rotas e Monitoramento
+          </button>
+        </nav>
+      </div>
+
+      <!-- Painel Registro -->
+      <div id="panelRegistro">
+        <!-- Cabeçalho da empresa -->
+        <div class="bg-white rounded-2xl shadow-sm p-5 mb-7 flex flex-wrap justify-between items-center gap-4 border border-gray-100">
+          <div>
+            <p class="text-xs uppercase tracking-wide text-green-600 font-semibold"><i class="fas fa-recycle mr-1"></i> Empresa parceira</p>
+            <h2 id="companyNameDisplay" class="text-2xl font-bold text-gray-800">Futuro Verde Reciclagem</h2>
+            <p class="text-sm text-gray-500 mt-1">Sistema de gestão de coleta e reciclagem</p>
+          </div>
+          <div class="bg-green-50 rounded-full px-4 py-2 text-green-700 text-sm font-medium">
+            <i class="fas fa-chart-simple mr-1"></i> Dados em tempo real
+          </div>
+        </div>
+
+        <!-- Cards estatísticos -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-7">
+          <div class="stat-card bg-white rounded-xl shadow-sm p-4 flex items-center gap-4 border-l-4 border-green-500">
+            <div class="bg-green-100 p-3 rounded-full"><i class="fas fa-weight-hanging text-green-700 text-xl"></i></div>
+            <div><p class="text-gray-500 text-sm font-medium">Total Coletado</p><p id="statTotalKg" class="text-2xl font-black text-gray-800">0 kg</p></div>
+          </div>
+          <div class="stat-card bg-white rounded-xl shadow-sm p-4 flex items-center gap-4 border-l-4 border-emerald-500">
+            <div class="bg-emerald-100 p-3 rounded-full"><i class="fas fa-boxes text-emerald-700 text-xl"></i></div>
+            <div><p class="text-gray-500 text-sm font-medium">Registros</p><p id="statTotalRecords" class="text-2xl font-black text-gray-800">0</p></div>
+          </div>
+          <div class="stat-card bg-white rounded-xl shadow-sm p-4 flex items-center gap-4 border-l-4 border-blue-500">
+            <div class="bg-blue-100 p-3 rounded-full"><i class="fas fa-dollar-sign text-blue-700 text-xl"></i></div>
+            <div><p class="text-gray-500 text-sm font-medium">Receita Total</p><p id="statReceitaTotal" class="text-2xl font-black text-gray-800">R$ 0,00</p></div>
+          </div>
+          <div class="stat-card bg-white rounded-xl shadow-sm p-4 flex items-center gap-4 border-l-4 border-purple-500">
+            <div class="bg-purple-100 p-3 rounded-full"><i class="fas fa-chart-line text-purple-700 text-xl"></i></div>
+            <div><p class="text-gray-500 text-sm font-medium">Lucro Estimado</p><p id="statLucroEstimado" class="text-2xl font-black text-gray-800">R$ 0,00</p></div>
+          </div>
+        </div>
+
+        <!-- Formulário principal -->
+        <div class="bg-white rounded-2xl shadow-md p-5 md:p-6 border border-gray-100">
+          <form id="formColeta" class="space-y-6">
+            <!-- Seção 1 -->
+            <div class="section-title flex justify-between items-center flex-wrap gap-2">
+              <span><i class="fas fa-id-card mr-2"></i> 1. Dados de Identificação</span>
+              <div>
+                <button type="button" class="bg-green-100 text-green-700 px-3 py-1.5 rounded-lg text-sm font-medium mr-2 btn-action" onclick="document.getElementById('formColeta').dispatchEvent(new Event('submit'))"><i class="fas fa-save mr-1"></i> Salvar</button>
+                <button type="button" class="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium btn-action" onclick="clearSection('section1')"><i class="fas fa-eraser mr-1"></i> Limpar</button>
+              </div>
+            </div>
+            <div id="section1" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div><label class="block text-sm font-semibold text-gray-700 mb-1">Origem do Resíduo</label><select id="origemResiduo" class="w-full border border-gray-200 rounded-xl px-3 py-2.5 bg-white focus:border-green-500"><option value="">Selecione</option><option>Residencial</option><option>Comercial</option><option>Industrial</option><option>Ecoponto</option></select></div>
+              <div><label class="block text-sm font-semibold text-gray-700 mb-1">Gerador</label><input type="text" id="gerador" class="w-full border border-gray-200 rounded-xl px-3 py-2.5 focus:border-green-500"></div>
+              <div><label class="block text-sm font-semibold text-gray-700 mb-1">Operador/Catador</label><input type="text" id="operadorCatador" class="w-full border border-gray-200 rounded-xl px-3 py-2.5 focus:border-green-500"></div>
+              <div><label class="block text-sm font-semibold text-gray-700 mb-1">Geolocalização (GPS)</label><div class="flex gap-2"><input id="gpsLat" placeholder="Latitude" class="w-1/2 border border-gray-200 rounded-xl px-3 py-2.5"><input id="gpsLng" placeholder="Longitude" class="w-1/2 border border-gray-200 rounded-xl px-3 py-2.5"><button type="button" id="getLocationBtn" class="bg-gray-100 hover:bg-gray-200 px-3 rounded-xl transition"><i class="fas fa-map-marker-alt text-green-600"></i></button></div></div>
+            </div>
+
+            <!-- Seção 2 -->
+            <div class="section-title flex justify-between items-center flex-wrap gap-2">
+              <span><i class="fas fa-chart-pie mr-2"></i> 2. Quantitativos e Qualitativos</span>
+              <div>
+                <button type="button" class="bg-green-100 text-green-700 px-3 py-1.5 rounded-lg text-sm font-medium mr-2 btn-action" onclick="document.getElementById('formColeta').dispatchEvent(new Event('submit'))"><i class="fas fa-save mr-1"></i> Salvar</button>
+                <button type="button" class="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium btn-action" onclick="clearSection('section2')"><i class="fas fa-eraser mr-1"></i> Limpar</button>
+              </div>
+            </div>
+            <div id="section2" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div><label class="block text-sm font-semibold text-gray-700 mb-1">Peso Bruto (kg)</label><input type="number" step="0.01" id="pesoBruto" class="w-full border border-gray-200 rounded-xl px-3 py-2.5"></div>
+              <div><label class="block text-sm font-semibold text-gray-700 mb-1">Peso Líquido (kg) *</label><input type="number" step="0.01" id="pesoLiquido" class="w-full border border-gray-200 rounded-xl px-3 py-2.5" required></div>
+              <div><label class="block text-sm font-semibold text-gray-700 mb-1">Material *</label><select id="materialSelect" class="w-full border border-gray-200 rounded-xl px-3 py-2.5"><option value="">Selecionar</option><option>Plástico</option><option>Papel/Papelão</option><option>Vidro</option><option>Metal</option><option>Eletrônicos</option><option>Orgânico</option><option>Outros</option></select></div>
+              <div><label class="block text-sm font-semibold text-gray-700 mb-1">Subcategoria</label><select id="subcategoria" class="w-full border border-gray-200 rounded-xl px-3 py-2.5"><option value="">Selecionar</option></select></div>
+              <div><label class="block text-sm font-semibold text-gray-700 mb-1">Índice de Rejeito (kg)</label><input type="number" step="0.01" id="indiceRejeito" class="w-full border border-gray-200 rounded-xl px-3 py-2.5"></div>
+              <div><label class="block text-sm font-semibold text-gray-700 mb-1">Volume Ocupação (%)</label><input type="number" step="1" id="volumeOcupacao" class="w-full border border-gray-200 rounded-xl px-3 py-2.5"></div>
+            </div>
+
+            <!-- Seção 3 -->
+            <div class="section-title flex justify-between items-center flex-wrap gap-2">
+              <span><i class="fas fa-truck mr-2"></i> 3. Logísticos e Operacionais</span>
+              <div>
+                <button type="button" class="bg-green-100 text-green-700 px-3 py-1.5 rounded-lg text-sm font-medium mr-2 btn-action" onclick="document.getElementById('formColeta').dispatchEvent(new Event('submit'))"><i class="fas fa-save mr-1"></i> Salvar</button>
+                <button type="button" class="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium btn-action" onclick="clearSection('section3')"><i class="fas fa-eraser mr-1"></i> Limpar</button>
+              </div>
+            </div>
+            <div id="section3" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div><label class="block text-sm font-semibold text-gray-700 mb-1">Horário Início</label><input type="time" id="horaInicio" class="w-full border border-gray-200 rounded-xl px-3 py-2.5"></div>
+              <div><label class="block text-sm font-semibold text-gray-700 mb-1">Horário Término</label><input type="time" id="horaTermino" class="w-full border border-gray-200 rounded-xl px-3 py-2.5"></div>
+              <div><label class="block text-sm font-semibold text-gray-700 mb-1">Quilometragem (km)</label><input type="number" step="0.1" id="quilometragem" class="w-full border border-gray-200 rounded-xl px-3 py-2.5"></div>
+              <div><label class="block text-sm font-semibold text-gray-700 mb-1">Consumo Combustível (L)</label><input type="number" step="0.1" id="consumoCombustivel" class="w-full border border-gray-200 rounded-xl px-3 py-2.5"></div>
+              <div><label class="block text-sm font-semibold text-gray-700 mb-1">Frequência de Coleta</label><input type="text" id="frequenciaColeta" placeholder="Ex: 2x/semana" class="w-full border border-gray-200 rounded-xl px-3 py-2.5"></div>
+            </div>
+
+            <!-- Seção 4 -->
+            <div class="section-title flex justify-between items-center flex-wrap gap-2">
+              <span><i class="fas fa-chart-line mr-2"></i> 4. Financeiros e Conformidade</span>
+              <div>
+                <button type="button" class="bg-green-100 text-green-700 px-3 py-1.5 rounded-lg text-sm font-medium mr-2 btn-action" onclick="document.getElementById('formColeta').dispatchEvent(new Event('submit'))"><i class="fas fa-save mr-1"></i> Salvar</button>
+                <button type="button" class="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium btn-action" onclick="clearSection('section4')"><i class="fas fa-eraser mr-1"></i> Limpar</button>
+              </div>
+            </div>
+            <div id="section4" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div><label class="block text-sm font-semibold text-gray-700 mb-1">Preço de Venda (R$/kg)</label><input type="number" step="0.01" id="precoVenda" class="w-full border border-gray-200 rounded-xl px-3 py-2.5"></div>
+              <div><label class="block text-sm font-semibold text-gray-700 mb-1">Custo Operacional (R$/kg)</label><input type="number" step="0.01" id="custoOperacional" class="w-full border border-gray-200 rounded-xl px-3 py-2.5"></div>
+              <div><label class="block text-sm font-semibold text-gray-700 mb-1">MTR (Manifesto)</label><input type="text" id="mtr" class="w-full border border-gray-200 rounded-xl px-3 py-2.5"></div>
+              <div><label class="block text-sm font-semibold text-gray-700 mb-1">CDF (Certificado)</label><input type="text" id="cdf" class="w-full border border-gray-200 rounded-xl px-3 py-2.5"></div>
+              <div><label class="block text-sm font-semibold text-gray-700 mb-1">Data da Coleta *</label><input type="date" id="dataColeta" class="w-full border border-gray-200 rounded-xl px-3 py-2.5"></div>
+              <div><label class="block text-sm font-semibold text-gray-700 mb-1">Local (endereço)</label><input type="text" id="localColeta" class="w-full border border-gray-200 rounded-xl px-3 py-2.5"></div>
+              <div class="md:col-span-2"><label class="block text-sm font-semibold text-gray-700 mb-1">Observações</label><textarea id="obsColeta" rows="2" class="w-full border border-gray-200 rounded-xl px-3 py-2.5"></textarea></div>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+              <button type="submit" id="btnSubmitRecord" class="bg-green-700 hover:bg-green-800 text-white px-6 py-2.5 rounded-xl font-semibold shadow-sm transition-all flex items-center gap-2"><i class="fas fa-save"></i> Adicionar registro</button>
+              <button type="button" id="btnCancelEdit" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-2.5 rounded-xl font-semibold transition-all hidden items-center gap-2"><i class="fas fa-times-circle"></i> Cancelar edição</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Histórico de coletas -->
+        <div class="bg-white rounded-2xl shadow-md overflow-hidden mt-8">
+          <div class="bg-gray-50 px-5 py-3 border-b flex justify-between items-center">
+            <h3 class="font-bold text-gray-700"><i class="fas fa-history text-green-600 mr-2"></i> Histórico de coletas</h3>
+            <span class="text-xs text-gray-400 bg-white px-2 py-1 rounded-full"><i class="far fa-eye"></i> Clique na linha para detalhes</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50 text-gray-600 text-xs font-semibold uppercase">
+                <tr><th class="px-4 py-3 text-left">Gerador</th><th class="px-4 py-3 text-left">Material</th><th class="px-4 py-3 text-left">Peso Líq</th><th class="px-4 py-3 text-left">Data</th><th class="px-4 py-3 text-left">Local/Origem</th><th class="px-4 py-3 text-center">Ações</th> </tr>
+              </thead>
+              <tbody id="tabelaRegistrosBody" class="divide-y divide-gray-100 text-sm"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Painel Análise -->
+      <div id="panelAnalise" class="hidden">
+        <div class="bg-white p-5 rounded-2xl shadow-sm mb-6 border border-gray-100">
+          <h3 class="text-lg font-bold text-gray-800 mb-3">Filtrar por período</h3>
+          <div class="flex flex-wrap gap-3">
+            <label class="period-badge flex items-center gap-2 cursor-pointer"><input type="radio" name="periodo" value="1m" class="hidden" checked><span class="px-4 py-2 rounded-full border border-gray-300 bg-white text-gray-700 text-sm font-medium">1 mês</span></label>
+            <label class="period-badge flex items-center gap-2 cursor-pointer"><input type="radio" name="periodo" value="6m" class="hidden"><span class="px-4 py-2 rounded-full border border-gray-300 bg-white text-gray-700 text-sm font-medium">6 meses</span></label>
+            <label class="period-badge flex items-center gap-2 cursor-pointer"><input type="radio" name="periodo" value="1y" class="hidden"><span class="px-4 py-2 rounded-full border border-gray-300 bg-white text-gray-700 text-sm font-medium">1 ano</span></label>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
+          <div class="bg-white p-4 rounded-xl shadow-sm"><p class="text-gray-500 text-sm">Total Coletado</p><p id="analiseTotalKg" class="text-2xl font-bold">0 kg</p></div>
+          <div class="bg-white p-4 rounded-xl shadow-sm"><p class="text-gray-500 text-sm">Receita Total</p><p id="analiseReceita" class="text-2xl font-bold">R$ 0,00</p></div>
+          <div class="bg-white p-4 rounded-xl shadow-sm"><p class="text-gray-500 text-sm">Custo Total</p><p id="analiseCusto" class="text-2xl font-bold">R$ 0,00</p></div>
+          <div class="bg-white p-4 rounded-xl shadow-sm"><p class="text-gray-500 text-sm">Lucro</p><p id="analiseLucro" class="text-2xl font-bold">R$ 0,00</p></div>
+          <div class="bg-white p-4 rounded-xl shadow-sm"><p class="text-gray-500 text-sm">Custo por kg</p><p id="analiseCustoKg" class="text-2xl font-bold">R$ 0,00</p></div>
+          <div class="bg-white p-4 rounded-xl shadow-sm"><p class="text-gray-500 text-sm">Receita por kg</p><p id="analiseReceitaKg" class="text-2xl font-bold">R$ 0,00</p></div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div class="bg-white p-4 rounded-xl shadow-sm"><canvas id="pieChart" height="250"></canvas><p class="text-center text-sm text-gray-500 mt-2">Distribuição por material (kg)</p></div>
+          <div class="bg-white p-4 rounded-xl shadow-sm"><canvas id="barChart" height="250"></canvas><p class="text-center text-sm text-gray-500 mt-2">Evolução mensal (kg)</p></div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div class="bg-gray-50 px-4 py-3 border-b"><h3 class="font-bold"><i class="fas fa-table mr-2 text-green-600"></i>Planilha de dados (período selecionado)</h3></div>
+          <div class="overflow-x-auto"><table class="min-w-full text-sm"><thead class="bg-gray-100"><tr><th class="p-3 text-left">Data</th><th class="p-3 text-left">Material</th><th class="p-3 text-left">Peso (kg)</th><th class="p-3 text-left">Receita (R$)</th><th class="p-3 text-left">Custo (R$)</th></tr></thead><tbody id="analiseTableBody"></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- Painel Rotas -->
+      <div id="panelRotas" class="hidden">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+          <div class="bg-white p-4 rounded-xl shadow-sm"><p class="text-gray-500 text-sm">Distância total</p><p id="totalDistancia" class="text-2xl font-bold">0 km</p></div>
+          <div class="bg-white p-4 rounded-xl shadow-sm"><p class="text-gray-500 text-sm">Combustível total</p><p id="totalCombustivel" class="text-2xl font-bold">0 L</p></div>
+          <div class="bg-white p-4 rounded-xl shadow-sm"><p class="text-gray-500 text-sm">Custo logístico</p><p id="totalCustoLog" class="text-2xl font-bold">R$ 0,00</p></div>
+          <div class="bg-white p-4 rounded-xl shadow-sm"><p class="text-gray-500 text-sm">Eficiência média</p><p id="eficienciaMedia" class="text-2xl font-bold">0 L/km</p></div>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div class="bg-gray-50 px-4 py-3 border-b"><h3 class="font-bold"><i class="fas fa-route mr-2 text-green-600"></i>Histórico de rotas e monitoramento</h3></div>
+          <div class="overflow-x-auto"><table class="min-w-full text-sm"><thead class="bg-gray-100"><tr><th class="p-3 text-left">Data</th><th class="p-3 text-left">Gerador</th><th class="p-3 text-left">GPS</th><th class="p-3 text-left">Distância (km)</th><th class="p-3 text-left">Combustível (L)</th><th class="p-3 text-left">Horário</th><th class="p-3 text-left">Custo (R$)</th></tr></thead><tbody id="rotasTableBody"></tbody></table></div>
+        </div>
+      </div>
+    </main>
+    <footer class="text-center text-gray-400 text-xs py-6 mt-8 border-t border-gray-200">
+      <i class="fas fa-seedling text-green-500 mr-1"></i> Futuro Verde Reciclagem · Dados armazenados com segurança no Firebase
+    </footer>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // ==================== CONFIGURAÇÃO DO FIREBASE ====================
-    // SUBSTITUA OS VALORES ABAIXO PELOS DADOS DO SEU PROJETO FIREBASE
     const firebaseConfig = {
       apiKey: "AIzaSyB2kl5dWz8z8yqoB-TEoW6ptXh_g08eLtI",
       authDomain: "datarecicla.firebaseapp.com",
       projectId: "datarecicla",
       storageBucket: "datarecicla.firebasestorage.app",
       messagingSenderId: "624111550531",
-      appId: "1:624111550531:web:c2615ac8942204817694f6"
+      appId: "1:624111550531:web:c2615ac8942204817694f6",
+      measurementId: "G-WY1KV1GTFE"
     };
-    // =================================================================
 
-    // Inicializar Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Elementos da interface
+    // DOM elements
     const loginScreen = document.getElementById("loginScreen");
-    const appPanel = document.getElementById("appPanel");
+    const appContainer = document.getElementById("appContainer");
     const emailInput = document.getElementById("emailLoginInput");
     const passwordInput = document.getElementById("passwordLoginInput");
-    const btnAcessar = document.getElementById("btnAcessar");
-    const btnCadastrar = document.getElementById("btnCadastrar");
-    const loginErrorMessage = document.getElementById("loginErrorMessage");
-    const logoutBtn = document.getElementById("logoutBtnGlobal");
-    const userEmailHeader = document.getElementById("userEmailHeader");
-    const empresaNomeHeader = document.getElementById("empresaNomeHeader");
-    const companyNameDisplay = document.getElementById("companyNameDisplay");
-    const editCompanyBtn = document.getElementById("editCompanyBtn");
+    const btnLogin = document.getElementById("btnLogin");
+    const btnSignup = document.getElementById("btnSignup");
+    const loginError = document.getElementById("loginErrorMessage");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const userEmailSpan = document.getElementById("userEmailHeader");
+    const companyNameSpan = document.getElementById("empresaNomeHeader");
+    const companyDisplay = document.getElementById("companyNameDisplay");
+
+    // Tabs
+    const tabRegistro = document.getElementById("tabRegistro");
+    const tabAnalise = document.getElementById("tabAnalise");
+    const tabRotas = document.getElementById("tabRotas");
+    const panelRegistro = document.getElementById("panelRegistro");
+    const panelAnalise = document.getElementById("panelAnalise");
+    const panelRotas = document.getElementById("panelRotas");
+
+    // Form fields
     const formColeta = document.getElementById("formColeta");
-    
-    // Campos do formulário - Seção 1
     const origemResiduo = document.getElementById("origemResiduo");
     const gerador = document.getElementById("gerador");
     const operadorCatador = document.getElementById("operadorCatador");
     const gpsLat = document.getElementById("gpsLat");
     const gpsLng = document.getElementById("gpsLng");
     const getLocationBtn = document.getElementById("getLocationBtn");
-    
-    // Seção 2
     const pesoBruto = document.getElementById("pesoBruto");
     const pesoLiquido = document.getElementById("pesoLiquido");
     const materialSelect = document.getElementById("materialSelect");
     const subcategoria = document.getElementById("subcategoria");
     const indiceRejeito = document.getElementById("indiceRejeito");
     const volumeOcupacao = document.getElementById("volumeOcupacao");
-    
-    // Seção 3
     const horaInicio = document.getElementById("horaInicio");
     const horaTermino = document.getElementById("horaTermino");
     const quilometragem = document.getElementById("quilometragem");
     const consumoCombustivel = document.getElementById("consumoCombustivel");
     const frequenciaColeta = document.getElementById("frequenciaColeta");
-    
-    // Seção 4
     const precoVenda = document.getElementById("precoVenda");
     const custoOperacional = document.getElementById("custoOperacional");
     const mtr = document.getElementById("mtr");
     const cdf = document.getElementById("cdf");
-    
-    const btnSubmitRecord = document.getElementById("btnSubmitRecord");
+    const dataColeta = document.getElementById("dataColeta");
+    const localColeta = document.getElementById("localColeta");
+    const obsColeta = document.getElementById("obsColeta");
+    const btnSubmit = document.getElementById("btnSubmitRecord");
     const btnCancelEdit = document.getElementById("btnCancelEdit");
-    const tabelaRegistrosBody = document.getElementById("tabelaRegistrosBody");
+    const tabelaRegistros = document.getElementById("tabelaRegistrosBody");
     const statTotalKg = document.getElementById("statTotalKg");
     const statTotalRecords = document.getElementById("statTotalRecords");
     const statReceitaTotal = document.getElementById("statReceitaTotal");
@@ -86,69 +408,10 @@
     let currentRecords = [];
     let editMode = false;
     let editRecordId = null;
-
-    function getEmpresaDocRef(uid) {
-      return doc(db, "empresas", uid);
-    }
-
-    async function loadEmpresaData(uid) {
-      const docRef = getEmpresaDocRef(uid);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        return {
-          profile: data.profile || { companyName: "Minha Recicladora" },
-          records: data.records || []
-        };
-      } else {
-        const defaultData = {
-          profile: { companyName: "Minha Recicladora" },
-          records: []
-        };
-        await setDoc(docRef, defaultData);
-        return defaultData;
-      }
-    }
-
-    async function updateEmpresaProfile(uid, newProfile) {
-      const docRef = getEmpresaDocRef(uid);
-      await updateDoc(docRef, { profile: newProfile });
-    }
-
-    async function addRecord(uid, record) {
-      const docRef = getEmpresaDocRef(uid);
-      const newRecord = { ...record, id: Date.now().toString() };
-      await updateDoc(docRef, { records: arrayUnion(newRecord) });
-      return newRecord;
-    }
-
-    async function updateRecord(uid, oldRecordId, updatedRecord) {
-      const docRef = getEmpresaDocRef(uid);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        let records = docSnap.data().records || [];
-        const index = records.findIndex(r => r.id === oldRecordId);
-        if (index !== -1) {
-          records[index] = { ...updatedRecord, id: oldRecordId };
-          await updateDoc(docRef, { records: records });
-        }
-      }
-    }
-
-    async function deleteRecord(uid, recordId) {
-      const docRef = getEmpresaDocRef(uid);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        let records = docSnap.data().records || [];
-        const recordToDelete = records.find(r => r.id === recordId);
-        if (recordToDelete) {
-          await updateDoc(docRef, { records: arrayRemove(recordToDelete) });
-        }
-      }
-    }
+    let pieChart = null, barChart = null;
 
     function getSubcategorias(material) {
-      const subMap = {
+      const map = {
         "Plástico": ["PET", "PEAD", "PEBD", "PP", "PVC", "Outros Plásticos"],
         "Papel/Papelão": ["Papelão", "Papel Branco", "Papel Misturado", "Jornais/Revistas"],
         "Vidro": ["Vidro Transparente", "Vidro Âmbar", "Vidro Verde", "Outros Vidros"],
@@ -157,149 +420,154 @@
         "Orgânico": ["Restos de Alimentos", "Podas", "Resíduos Verdes"],
         "Outros": ["Borrachas", "Têxteis", "Madeira", "Gesso"]
       };
-      return subMap[material] || [];
+      return map[material] || [];
     }
 
     function updateSubcategorias() {
-      const material = materialSelect.value;
-      const subSelect = subcategoria;
-      subSelect.innerHTML = '<option value="">Selecionar subcategoria</option>';
-      if (material) {
-        getSubcategorias(material).forEach(sub => {
-          const option = document.createElement("option");
-          option.value = sub;
-          option.textContent = sub;
-          subSelect.appendChild(option);
+      const mat = materialSelect.value;
+      const sub = subcategoria;
+      sub.innerHTML = '<option value="">Selecionar subcategoria</option>';
+      if (mat) {
+        getSubcategorias(mat).forEach(s => {
+          const opt = document.createElement("option");
+          opt.value = s;
+          opt.textContent = s;
+          sub.appendChild(opt);
         });
+      }
+    }
+
+    function getEmpresaDocRef(uid) { return doc(db, "empresas", uid); }
+    async function loadEmpresaData(uid) {
+      const docRef = getEmpresaDocRef(uid);
+      const snap = await getDoc(docRef);
+      if (snap.exists()) return snap.data();
+      const def = { profile: { companyName: "Futuro Verde Reciclagem" }, records: [] };
+      await setDoc(docRef, def);
+      return def;
+    }
+    async function addRecord(uid, record) {
+      const newRec = { ...record, id: Date.now().toString() };
+      await updateDoc(getEmpresaDocRef(uid), { records: arrayUnion(newRec) });
+      return newRec;
+    }
+    async function updateRecord(uid, oldId, updated) {
+      const ref = getEmpresaDocRef(uid);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        let records = snap.data().records || [];
+        const idx = records.findIndex(r => r.id === oldId);
+        if (idx !== -1) {
+          records[idx] = { ...updated, id: oldId };
+          await updateDoc(ref, { records });
+        }
+      }
+    }
+    async function deleteRecord(uid, recId) {
+      const ref = getEmpresaDocRef(uid);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        let records = snap.data().records || [];
+        const toDel = records.find(r => r.id === recId);
+        if (toDel) await updateDoc(ref, { records: arrayRemove(toDel) });
       }
     }
 
     function renderDashboard(records) {
-      const totalKg = records.reduce((acc, r) => acc + (parseFloat(r.pesoLiquido) || 0), 0);
-      const totalRegistros = records.length;
-      const receitaTotal = records.reduce((acc, r) => acc + ((parseFloat(r.precoVenda) || 0) * (parseFloat(r.pesoLiquido) || 0)), 0);
-      const custoTotal = records.reduce((acc, r) => acc + ((parseFloat(r.custoOperacional) || 0) * (parseFloat(r.pesoLiquido) || 0)), 0);
-      const lucroEstimado = receitaTotal - custoTotal;
-
+      const totalKg = records.reduce((a, r) => a + (parseFloat(r.pesoLiquido) || 0), 0);
+      const totalReg = records.length;
+      const receita = records.reduce((a, r) => a + ((parseFloat(r.precoVenda) || 0) * (parseFloat(r.pesoLiquido) || 0)), 0);
+      const custo = records.reduce((a, r) => a + ((parseFloat(r.custoOperacional) || 0) * (parseFloat(r.pesoLiquido) || 0)), 0);
       statTotalKg.innerHTML = `${totalKg.toFixed(2)} kg`;
-      statTotalRecords.innerText = totalRegistros;
-      statReceitaTotal.innerHTML = `R$ ${receitaTotal.toFixed(2)}`;
-      statLucroEstimado.innerHTML = `R$ ${lucroEstimado.toFixed(2)}`;
+      statTotalRecords.innerText = totalReg;
+      statReceitaTotal.innerHTML = `R$ ${receita.toFixed(2)}`;
+      statLucroEstimado.innerHTML = `R$ ${(receita - custo).toFixed(2)}`;
 
       if (!records.length) {
-        tabelaRegistrosBody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-gray-400"><i class="fas fa-leaf mr-2"></i> Nenhuma coleta registrada. Comece agora!</td></tr>`;
+        tabelaRegistros.innerHTML = `早点<td colspan="6" class="text-center py-10 text-gray-400"><i class="fas fa-leaf"></i> Nenhuma coleta registrada. Comece agora!早点</tr>`;
         return;
       }
-      tabelaRegistrosBody.innerHTML = "";
-      records.forEach(record => {
-        const row = tabelaRegistrosBody.insertRow();
-        row.className = "table-row-hover transition cursor-pointer";
-        row.insertCell(0).innerHTML = `<span class="font-medium">${escapeHtml(record.gerador || "—")}</span>`;
-        row.insertCell(1).innerHTML = `<span class="font-medium flex items-center gap-1"><i class="fas fa-cube text-green-500 text-xs"></i> ${escapeHtml(record.material)}${record.subcategoria ? ` (${record.subcategoria})` : ''}</span>`;
-        row.insertCell(2).innerHTML = `<strong>${parseFloat(record.pesoLiquido || 0).toFixed(2)}</strong> kg`;
-        row.insertCell(3).innerHTML = record.dataColeta || "—";
-        row.insertCell(4).innerHTML = `${escapeHtml(record.origemResiduo || "")} ${record.localColeta ? `· ${record.localColeta}` : ''}`;
+      tabelaRegistros.innerHTML = "";
+      records.forEach(rec => {
+        const row = tabelaRegistros.insertRow();
+        row.className = "table-row-hover cursor-pointer";
+        row.insertCell(0).innerHTML = escapeHtml(rec.gerador || "—");
+        row.insertCell(1).innerHTML = `${escapeHtml(rec.material)}${rec.subcategoria ? ` (${rec.subcategoria})` : ''}`;
+        row.insertCell(2).innerHTML = `${(parseFloat(rec.pesoLiquido) || 0).toFixed(2)} kg`;
+        row.insertCell(3).innerHTML = rec.dataColeta || "—";
+        row.insertCell(4).innerHTML = `${rec.origemResiduo || ""} ${rec.localColeta ? `· ${rec.localColeta}` : ''}`;
         const cellAcoes = row.insertCell(5);
-        cellAcoes.className = "text-center whitespace-nowrap";
-        cellAcoes.innerHTML = `
-          <button class="editBtn bg-blue-50 hover:bg-blue-100 text-blue-700 px-2 py-1 rounded-lg mx-1 transition" data-id="${record.id}"><i class="fas fa-pencil-alt"></i></button>
-          <button class="deleteBtn bg-red-50 hover:bg-red-100 text-red-600 px-2 py-1 rounded-lg mx-1 transition" data-id="${record.id}"><i class="fas fa-trash"></i></button>
-        `;
-        // Clique na linha para ver detalhes
-        row.addEventListener("click", (e) => {
-          if (e.target.tagName !== 'BUTTON') {
-            showRecordDetails(record);
-          }
-        });
+        cellAcoes.className = "text-center";
+        cellAcoes.innerHTML = `<button class="editBtn bg-blue-100 text-blue-700 px-2 py-1 rounded" data-id="${rec.id}"><i class="fas fa-edit"></i></button>
+                                <button class="deleteBtn bg-red-100 text-red-600 px-2 py-1 rounded ml-1" data-id="${rec.id}"><i class="fas fa-trash"></i></button>`;
+        row.addEventListener("click", (e) => { if (e.target.tagName !== 'BUTTON') showDetails(rec); });
       });
       document.querySelectorAll(".editBtn").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const id = btn.getAttribute("data-id");
-          const record = records.find(r => r.id === id);
-          if (record) openEditRecord(record);
-        });
+        btn.addEventListener("click", (e) => { e.stopPropagation(); openEdit(records.find(r => r.id === btn.dataset.id)); });
       });
       document.querySelectorAll(".deleteBtn").forEach(btn => {
-        btn.addEventListener("click", async (e) => {
-          e.stopPropagation();
-          const id = btn.getAttribute("data-id");
-          if (confirm("Excluir este registro de coleta permanentemente?")) {
-            await deleteRecord(currentUser.uid, id);
-            await refreshUserData();
-          }
-        });
+        btn.addEventListener("click", async (e) => { e.stopPropagation(); if (confirm("Excluir permanentemente?")) { await deleteRecord(currentUser.uid, btn.dataset.id); await refreshUserData(); } });
       });
     }
 
-    function showRecordDetails(record) {
+    function showDetails(rec) {
       alert(`
 📋 DETALHES DA COLETA
 
 🏷️ IDENTIFICAÇÃO:
-Origem: ${record.origemResiduo || "—"}
-Gerador: ${record.gerador || "—"}
-Operador: ${record.operadorCatador || "—"}
-Local: ${record.localColeta || "—"}
-GPS: ${record.gpsLat && record.gpsLng ? `${record.gpsLat}, ${record.gpsLng}` : "—"}
+Origem: ${rec.origemResiduo || "—"}
+Gerador: ${rec.gerador || "—"}
+Operador: ${rec.operadorCatador || "—"}
+Local: ${rec.localColeta || "—"}
+GPS: ${rec.gpsLat && rec.gpsLng ? `${rec.gpsLat}, ${rec.gpsLng}` : "—"}
 
 ⚖️ QUANTITATIVO:
-Material: ${record.material} ${record.subcategoria ? `(${record.subcategoria})` : ''}
-Peso Bruto: ${record.pesoBruto || 0} kg
-Peso Líquido: ${record.pesoLiquido || 0} kg
-Rejeito: ${record.indiceRejeito || 0} kg
-Ocupação Volume: ${record.volumeOcupacao || 0}%
+Material: ${rec.material} ${rec.subcategoria ? `(${rec.subcategoria})` : ''}
+Peso Bruto: ${rec.pesoBruto || 0} kg | Líquido: ${rec.pesoLiquido || 0} kg
+Rejeito: ${rec.indiceRejeito || 0} kg | Ocupação: ${rec.volumeOcupacao || 0}%
 
 🚛 LOGÍSTICA:
-Início: ${record.horaInicio || "—"}  |  Término: ${record.horaTermino || "—"}
-Quilometragem: ${record.quilometragem || 0} km
-Combustível: ${record.consumoCombustivel || 0} L
-Frequência: ${record.frequenciaColeta || "—"}
+Início: ${rec.horaInicio || "—"} | Término: ${rec.horaTermino || "—"}
+Distância: ${rec.quilometragem || 0} km | Combustível: ${rec.consumoCombustivel || 0} L
+Frequência: ${rec.frequenciaColeta || "—"}
 
 💰 FINANCEIRO:
-Preço Venda: R$ ${record.precoVenda || 0}/kg
-Custo Operacional: R$ ${record.custoOperacional || 0}/kg
-MTR: ${record.mtr || "—"}
-CDF: ${record.cdf || "—"}
-
-📅 Data da coleta: ${record.dataColeta || "—"}
+Preço Venda: R$ ${rec.precoVenda || 0}/kg | Custo: R$ ${rec.custoOperacional || 0}/kg
+MTR: ${rec.mtr || "—"} | CDF: ${rec.cdf || "—"}
       `);
     }
 
-    function openEditRecord(record) {
-      // Preencher todos os campos
-      origemResiduo.value = record.origemResiduo || "";
-      gerador.value = record.gerador || "";
-      operadorCatador.value = record.operadorCatador || "";
-      gpsLat.value = record.gpsLat || "";
-      gpsLng.value = record.gpsLng || "";
-      pesoBruto.value = record.pesoBruto || "";
-      pesoLiquido.value = record.pesoLiquido || "";
-      materialSelect.value = record.material || "";
+    function openEdit(rec) {
+      origemResiduo.value = rec.origemResiduo || "";
+      gerador.value = rec.gerador || "";
+      operadorCatador.value = rec.operadorCatador || "";
+      gpsLat.value = rec.gpsLat || "";
+      gpsLng.value = rec.gpsLng || "";
+      pesoBruto.value = rec.pesoBruto || "";
+      pesoLiquido.value = rec.pesoLiquido || "";
+      materialSelect.value = rec.material || "";
       updateSubcategorias();
-      subcategoria.value = record.subcategoria || "";
-      indiceRejeito.value = record.indiceRejeito || "";
-      volumeOcupacao.value = record.volumeOcupacao || "";
-      horaInicio.value = record.horaInicio || "";
-      horaTermino.value = record.horaTermino || "";
-      quilometragem.value = record.quilometragem || "";
-      consumoCombustivel.value = record.consumoCombustivel || "";
-      frequenciaColeta.value = record.frequenciaColeta || "";
-      precoVenda.value = record.precoVenda || "";
-      custoOperacional.value = record.custoOperacional || "";
-      mtr.value = record.mtr || "";
-      cdf.value = record.cdf || "";
-      dataColeta.value = record.dataColeta || "";
-      localColeta.value = record.localColeta || "";
-      obsColeta.value = record.notes || "";
-
+      subcategoria.value = rec.subcategoria || "";
+      indiceRejeito.value = rec.indiceRejeito || "";
+      volumeOcupacao.value = rec.volumeOcupacao || "";
+      horaInicio.value = rec.horaInicio || "";
+      horaTermino.value = rec.horaTermino || "";
+      quilometragem.value = rec.quilometragem || "";
+      consumoCombustivel.value = rec.consumoCombustivel || "";
+      frequenciaColeta.value = rec.frequenciaColeta || "";
+      precoVenda.value = rec.precoVenda || "";
+      custoOperacional.value = rec.custoOperacional || "";
+      mtr.value = rec.mtr || "";
+      cdf.value = rec.cdf || "";
+      dataColeta.value = rec.dataColeta || "";
+      localColeta.value = rec.localColeta || "";
+      obsColeta.value = rec.notes || "";
       editMode = true;
-      editRecordId = record.id;
-      btnSubmitRecord.innerHTML = '<i class="fas fa-sync-alt"></i> Atualizar coleta';
-      btnSubmitRecord.classList.add("bg-amber-600", "hover:bg-amber-700");
-      btnSubmitRecord.classList.remove("bg-green-600", "hover:bg-green-700");
+      editRecordId = rec.id;
+      btnSubmit.innerHTML = '<i class="fas fa-sync-alt"></i> Atualizar coleta';
+      btnSubmit.classList.add("bg-amber-600", "hover:bg-amber-700");
+      btnSubmit.classList.remove("bg-green-700");
       btnCancelEdit.classList.remove("hidden");
-      btnCancelEdit.classList.add("flex");
       window.scrollTo({ top: formColeta.offsetTop - 100, behavior: "smooth" });
     }
 
@@ -311,30 +579,28 @@ CDF: ${record.cdf || "—"}
       dataColeta.value = today;
       editMode = false;
       editRecordId = null;
-      btnSubmitRecord.innerHTML = '<i class="fas fa-save"></i> Adicionar registro';
-      btnSubmitRecord.classList.remove("bg-amber-600", "hover:bg-amber-700");
-      btnSubmitRecord.classList.add("bg-green-600", "hover:bg-green-700");
+      btnSubmit.innerHTML = '<i class="fas fa-save"></i> Adicionar registro';
+      btnSubmit.classList.remove("bg-amber-600");
+      btnSubmit.classList.add("bg-green-700");
       btnCancelEdit.classList.add("hidden");
-      btnCancelEdit.classList.remove("flex");
     }
 
-    async function refreshUserData() {
-      if (!currentUser) return;
-      const data = await loadEmpresaData(currentUser.uid);
-      currentRecords = data.records;
-      const profile = data.profile;
-      userEmailHeader.innerText = currentUser.email;
-      const companyName = profile.companyName || "Recicladora";
-      empresaNomeHeader.innerText = companyName.length > 20 ? companyName.slice(0,18)+".." : companyName;
-      companyNameDisplay.innerHTML = `<span class="text-green-600">${escapeHtml(companyName)}</span>`;
-      renderDashboard(currentRecords);
-    }
+    window.clearSection = function(sectionId) {
+      const section = document.getElementById(sectionId);
+      if (!section) return;
+      const inputs = section.querySelectorAll("input, select, textarea");
+      inputs.forEach(input => {
+        if (input.tagName === 'SELECT') input.selectedIndex = 0;
+        else if (input.type === 'text' || input.type === 'number' || input.tagName === 'TEXTAREA') input.value = "";
+        else if (input.type === 'date') input.value = new Date().toISOString().slice(0,10);
+      });
+      if (sectionId === "section2") materialSelect.dispatchEvent(new Event('change'));
+    };
 
     formColeta.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (!currentUser) return;
-
-      const recordData = {
+      const record = {
         origemResiduo: origemResiduo.value,
         gerador: gerador.value,
         operadorCatador: operadorCatador.value,
@@ -359,231 +625,186 @@ CDF: ${record.cdf || "—"}
         localColeta: localColeta.value,
         notes: obsColeta.value
       };
-
-      if (!recordData.material) { alert("Selecione o tipo de material."); return; }
-      if (recordData.pesoLiquido <= 0) { alert("Insira um peso líquido válido."); return; }
-      if (!recordData.dataColeta) { alert("Informe a data da coleta."); return; }
+      if (!record.material) { alert("Selecione o material."); return; }
+      if (record.pesoLiquido <= 0) { alert("Peso líquido deve ser maior que zero."); return; }
+      if (!record.dataColeta) { alert("Informe a data."); return; }
 
       if (editMode && editRecordId) {
-        await updateRecord(currentUser.uid, editRecordId, recordData);
-        resetForm();
-        await refreshUserData();
+        await updateRecord(currentUser.uid, editRecordId, record);
       } else {
-        await addRecord(currentUser.uid, recordData);
-        resetForm();
-        await refreshUserData();
+        await addRecord(currentUser.uid, record);
       }
+      resetForm();
+      await refreshUserData();
+      renderAnalises();
+      renderRotas();
     });
 
     btnCancelEdit.addEventListener("click", resetForm);
-    editCompanyBtn.addEventListener("click", async () => {
+
+    async function refreshUserData() {
       if (!currentUser) return;
-      const currentName = (await loadEmpresaData(currentUser.uid)).profile.companyName;
-      const newName = prompt("✏️ Editar nome da empresa de reciclagem:", currentName);
-      if (newName && newName.trim() !== "") {
-        await updateEmpresaProfile(currentUser.uid, { companyName: newName.trim() });
-        await refreshUserData();
-      }
-    });
-    logoutBtn.addEventListener("click", async () => { await signOut(auth); });
-
-    // Geolocalização
-    getLocationBtn.addEventListener("click", () => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            gpsLat.value = position.coords.latitude.toFixed(6);
-            gpsLng.value = position.coords.longitude.toFixed(6);
-          },
-          (error) => {
-            alert("Erro ao obter localização: " + error.message);
-          }
-        );
-      } else {
-        alert("Geolocalização não suportada neste navegador.");
-      }
-    });
-
-    async function handleAuth(isSignUp = false) {
-      const email = emailInput.value.trim();
-      const password = passwordInput.value.trim();
-      if (!email || !password) {
-        loginErrorMessage.innerText = "Preencha e-mail e senha.";
-        return;
-      }
-      if (password.length < 6 && isSignUp) {
-        loginErrorMessage.innerText = "A senha deve ter pelo menos 6 caracteres.";
-        return;
-      }
-      try {
-        if (isSignUp) {
-          await createUserWithEmailAndPassword(auth, email, password);
-          loginErrorMessage.innerText = "Cadastro realizado! Redirecionando...";
-        } else {
-          await signInWithEmailAndPassword(auth, email, password);
-        }
-      } catch (error) {
-        if (error.code === 'auth/user-not-found') loginErrorMessage.innerText = "Usuário não encontrado. Clique em 'Criar conta' para cadastrar.";
-        else if (error.code === 'auth/wrong-password') loginErrorMessage.innerText = "Senha incorreta.";
-        else if (error.code === 'auth/email-already-in-use') loginErrorMessage.innerText = "E-mail já cadastrado. Faça login.";
-        else loginErrorMessage.innerText = "Erro: " + error.message;
-      }
+      const data = await loadEmpresaData(currentUser.uid);
+      currentRecords = data.records || [];
+      const profile = data.profile;
+      userEmailSpan.innerText = currentUser.email;
+      companyNameSpan.innerText = "Futuro Verde Reciclagem";
+      companyDisplay.innerHTML = `<span class="text-green-600">Futuro Verde Reciclagem</span>`;
+      renderDashboard(currentRecords);
+      renderAnalises();
+      renderRotas();
     }
 
-    btnAcessar.addEventListener("click", () => handleAuth(false));
-    btnCadastrar.addEventListener("click", () => handleAuth(true));
-    emailInput.addEventListener("keypress", (e) => { if (e.key === "Enter") handleAuth(false); });
-    passwordInput.addEventListener("keypress", (e) => { if (e.key === "Enter") handleAuth(false); });
-    materialSelect.addEventListener("change", updateSubcategorias);
+    function getDateFilter(period) {
+      const now = new Date();
+      if (period === '1m') { const d = new Date(); d.setMonth(d.getMonth() - 1); return d; }
+      else if (period === '6m') { const d = new Date(); d.setMonth(d.getMonth() - 6); return d; }
+      else if (period === '1y') { const d = new Date(); d.setFullYear(d.getFullYear() - 1); return d; }
+      return null;
+    }
+    function filterRecordsByPeriod(period) {
+      const filterDate = getDateFilter(period);
+      if (!filterDate) return currentRecords;
+      return currentRecords.filter(r => new Date(r.dataColeta) >= filterDate);
+    }
+    function renderAnalises(period = '1m') {
+      const filtered = filterRecordsByPeriod(period);
+      const totalKg = filtered.reduce((a, r) => a + (r.pesoLiquido || 0), 0);
+      const receita = filtered.reduce((a, r) => a + ((r.precoVenda || 0) * (r.pesoLiquido || 0)), 0);
+      const custo = filtered.reduce((a, r) => a + ((r.custoOperacional || 0) * (r.pesoLiquido || 0)), 0);
+      document.getElementById("analiseTotalKg").innerText = `${totalKg.toFixed(2)} kg`;
+      document.getElementById("analiseReceita").innerText = `R$ ${receita.toFixed(2)}`;
+      document.getElementById("analiseCusto").innerText = `R$ ${custo.toFixed(2)}`;
+      document.getElementById("analiseLucro").innerText = `R$ ${(receita - custo).toFixed(2)}`;
+      document.getElementById("analiseCustoKg").innerText = `R$ ${(custo / (totalKg || 1)).toFixed(2)}/kg`;
+      document.getElementById("analiseReceitaKg").innerText = `R$ ${(receita / (totalKg || 1)).toFixed(2)}/kg`;
+
+      const materialMap = new Map();
+      filtered.forEach(r => { const mat = r.material; materialMap.set(mat, (materialMap.get(mat) || 0) + (r.pesoLiquido || 0)); });
+      const pieLabels = Array.from(materialMap.keys()), pieData = Array.from(materialMap.values());
+      if (pieChart) pieChart.destroy();
+      const pieCtx = document.getElementById("pieChart").getContext("2d");
+      pieChart = new Chart(pieCtx, { type: 'pie', data: { labels: pieLabels, datasets: [{ data: pieData, backgroundColor: ['#4ade80','#facc15','#60a5fa','#f87171','#a78bfa','#2dd4bf','#fb923c'] }] }, options: { responsive: true, plugins: { legend: { position: 'bottom' } } } });
+
+      const monthly = new Map();
+      filtered.forEach(r => { const month = r.dataColeta.slice(0,7); monthly.set(month, (monthly.get(month) || 0) + (r.pesoLiquido || 0)); });
+      const sortedMonths = Array.from(monthly.keys()).sort();
+      if (barChart) barChart.destroy();
+      const barCtx = document.getElementById("barChart").getContext("2d");
+      barChart = new Chart(barCtx, { type: 'bar', data: { labels: sortedMonths, datasets: [{ label: 'Peso (kg)', data: sortedMonths.map(m => monthly.get(m)), backgroundColor: '#34d399' }] }, options: { responsive: true, scales: { y: { beginAtZero: true, title: { display: true, text: 'kg' } } } } });
+
+      const tbody = document.getElementById("analiseTableBody");
+      tbody.innerHTML = "";
+      filtered.forEach(r => { const row = tbody.insertRow(); row.insertCell(0).innerText = r.dataColeta || "—"; row.insertCell(1).innerText = r.material; row.insertCell(2).innerText = (r.pesoLiquido || 0).toFixed(2); row.insertCell(3).innerText = `R$ ${((r.precoVenda || 0) * (r.pesoLiquido || 0)).toFixed(2)}`; row.insertCell(4).innerText = `R$ ${((r.custoOperacional || 0) * (r.pesoLiquido || 0)).toFixed(2)}`; });
+    }
+
+    function renderRotas() {
+      const tbody = document.getElementById("rotasTableBody");
+      tbody.innerHTML = "";
+      if (!currentRecords.length) { tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8">Nenhuma rota registrada</td></tr>`; return; }
+      currentRecords.forEach(r => {
+        const row = tbody.insertRow();
+        row.insertCell(0).innerText = r.dataColeta || "—";
+        row.insertCell(1).innerText = r.gerador || "—";
+        row.insertCell(2).innerHTML = r.gpsLat && r.gpsLng ? `${r.gpsLat}, ${r.gpsLng}` : "—";
+        row.insertCell(3).innerText = (r.quilometragem || 0).toFixed(1);
+        row.insertCell(4).innerText = (r.consumoCombustivel || 0).toFixed(1);
+        row.insertCell(5).innerHTML = r.horaInicio && r.horaTermino ? `${r.horaInicio} - ${r.horaTermino}` : "—";
+        row.insertCell(6).innerHTML = `R$ ${((r.custoOperacional || 0) * (r.pesoLiquido || 0)).toFixed(2)}`;
+      });
+      const totalDist = currentRecords.reduce((a, r) => a + (r.quilometragem || 0), 0);
+      const totalFuel = currentRecords.reduce((a, r) => a + (r.consumoCombustivel || 0), 0);
+      const totalCost = currentRecords.reduce((a, r) => a + ((r.custoOperacional || 0) * (r.pesoLiquido || 0)), 0);
+      document.getElementById("totalDistancia").innerText = `${totalDist.toFixed(1)} km`;
+      document.getElementById("totalCombustivel").innerText = `${totalFuel.toFixed(1)} L`;
+      document.getElementById("totalCustoLog").innerText = `R$ ${totalCost.toFixed(2)}`;
+      const eficiencia = totalDist > 0 ? (totalFuel / totalDist).toFixed(2) : 0;
+      document.getElementById("eficienciaMedia").innerText = `${eficiencia} L/km`;
+    }
+
+    // Tab handling
+    tabRegistro.addEventListener("click", () => {
+      tabRegistro.classList.add("border-green-600", "text-green-700"); tabRegistro.classList.remove("border-transparent");
+      tabAnalise.classList.remove("border-green-600", "text-green-700"); tabAnalise.classList.add("border-transparent");
+      tabRotas.classList.remove("border-green-600", "text-green-700"); tabRotas.classList.add("border-transparent");
+      panelRegistro.classList.remove("hidden"); panelAnalise.classList.add("hidden"); panelRotas.classList.add("hidden");
+    });
+    tabAnalise.addEventListener("click", () => {
+      tabAnalise.classList.add("border-green-600", "text-green-700"); tabAnalise.classList.remove("border-transparent");
+      tabRegistro.classList.remove("border-green-600", "text-green-700"); tabRegistro.classList.add("border-transparent");
+      tabRotas.classList.remove("border-green-600", "text-green-700"); tabRotas.classList.add("border-transparent");
+      panelRegistro.classList.add("hidden"); panelAnalise.classList.remove("hidden"); panelRotas.classList.add("hidden");
+      renderAnalises(document.querySelector('input[name="periodo"]:checked')?.value || '1m');
+    });
+    tabRotas.addEventListener("click", () => {
+      tabRotas.classList.add("border-green-600", "text-green-700"); tabRotas.classList.remove("border-transparent");
+      tabRegistro.classList.remove("border-green-600", "text-green-700"); tabRegistro.classList.add("border-transparent");
+      tabAnalise.classList.remove("border-green-600", "text-green-700"); tabAnalise.classList.add("border-transparent");
+      panelRegistro.classList.add("hidden"); panelAnalise.classList.add("hidden"); panelRotas.classList.remove("hidden");
+      renderRotas();
+    });
+    document.querySelectorAll('input[name="periodo"]').forEach(radio => {
+      radio.addEventListener("change", (e) => renderAnalises(e.target.value));
+    });
+
+    // Auth handlers
+    async function handleSignup() {
+      const email = emailInput.value.trim();
+      const pwd = passwordInput.value.trim();
+      if (!email || !pwd) { loginError.innerText = "Preencha e-mail e senha."; return; }
+      if (pwd.length < 6) { loginError.innerText = "Senha deve ter pelo menos 6 caracteres."; return; }
+      try {
+        await createUserWithEmailAndPassword(auth, email, pwd);
+        loginError.innerText = "Cadastro realizado! Redirecionando...";
+      } catch (err) {
+        if (err.code === 'auth/email-already-in-use') loginError.innerText = "E-mail já cadastrado. Faça login.";
+        else loginError.innerText = "Erro: " + err.message;
+      }
+    }
+    async function handleLogin() {
+      const email = emailInput.value.trim();
+      const pwd = passwordInput.value.trim();
+      if (!email || !pwd) { loginError.innerText = "Preencha e-mail e senha."; return; }
+      try {
+        await signInWithEmailAndPassword(auth, email, pwd);
+      } catch (err) {
+        loginError.innerText = err.code === 'auth/user-not-found' ? "Usuário não encontrado. Crie uma conta." : "Erro: " + err.message;
+      }
+    }
+    btnLogin.addEventListener("click", handleLogin);
+    btnSignup.addEventListener("click", handleSignup);
+    emailInput.addEventListener("keypress", e => { if (e.key === "Enter") handleLogin(); });
+    passwordInput.addEventListener("keypress", e => { if (e.key === "Enter") handleLogin(); });
+    logoutBtn.addEventListener("click", () => signOut(auth));
 
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         currentUser = user;
         loginScreen.classList.add("hidden");
-        appPanel.classList.remove("hidden");
+        appContainer.classList.remove("hidden");
         await refreshUserData();
       } else {
         currentUser = null;
         loginScreen.classList.remove("hidden");
-        appPanel.classList.add("hidden");
+        appContainer.classList.add("hidden");
         resetForm();
         emailInput.value = "";
         passwordInput.value = "";
-        loginErrorMessage.innerText = "";
+        loginError.innerText = "";
       }
     });
 
-    function escapeHtml(str) {
-      if (!str) return "";
-      return str.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-      });
-    }
+    getLocationBtn.addEventListener("click", () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(p => { gpsLat.value = p.coords.latitude.toFixed(6); gpsLng.value = p.coords.longitude.toFixed(6); },
+          err => alert("Erro: " + err.message));
+      } else alert("Geolocalização não suportada.");
+    });
+    materialSelect.addEventListener("change", updateSubcategorias);
+    function escapeHtml(str) { if (!str) return ""; return str.replace(/[&<>]/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;' }[m])); }
 
     const today = new Date().toISOString().slice(0,10);
     dataColeta.value = today;
   </script>
-  <style>
-    body {
-      background: linear-gradient(145deg, #e9f5ef 0%, #d4e9df 100%);
-      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, sans-serif;
-    }
-    .card-glossy { background: rgba(255, 255, 255, 0.92); transition: transform 0.2s ease, box-shadow 0.2s ease; }
-    .card-glossy:hover { transform: translateY(-3px); box-shadow: 0 20px 25px -12px rgba(0, 0, 0, 0.15); }
-    input, select, textarea { transition: all 0.2s; }
-    input:focus, select:focus, textarea:focus { box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2); border-color: #22c55e; outline: none; }
-    .table-row-hover:hover { background-color: #f9fafb; }
-    .section-title { background: #f0fdf4; border-left: 4px solid #22c55e; padding: 8px 12px; margin-bottom: 16px; border-radius: 8px; font-weight: 600; color: #166534; }
-  </style>
-</head>
-<body class="antialiased">
-  <!-- TELA DE CADASTRO / LOGIN -->
-  <div id="loginScreen" class="min-h-screen flex items-center justify-center p-5">
-    <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden card-glossy border border-green-100">
-      <div class="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-8 text-center">
-        <i class="fas fa-chart-line text-5xl text-white drop-shadow-md mb-2"></i>
-        <h1 class="text-3xl font-bold text-white tracking-tight">DataRecicla</h1>
-        <p class="text-green-100 text-sm mt-1">Gestão inteligente de coleta e reciclagem</p>
-      </div>
-      <div class="p-7">
-        <div class="mb-4"><label class="block text-gray-700 font-semibold mb-2"><i class="far fa-envelope mr-2 text-green-600"></i>E-mail</label><input type="email" id="emailLoginInput" class="w-full border border-gray-300 rounded-xl px-4 py-3"></div>
-        <div class="mb-6"><label class="block text-gray-700 font-semibold mb-2"><i class="fas fa-lock mr-2 text-green-600"></i>Senha</label><input type="password" id="passwordLoginInput" class="w-full border border-gray-300 rounded-xl px-4 py-3"><p class="text-xs text-gray-500 mt-2">Mínimo 6 caracteres.</p></div>
-        <div class="flex flex-col gap-3">
-          <button id="btnAcessar" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-md transition flex items-center justify-center gap-2"><i class="fas fa-sign-in-alt"></i> Entrar</button>
-          <button id="btnCadastrar" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded-xl shadow-sm transition flex items-center justify-center gap-2"><i class="fas fa-user-plus"></i> Criar nova conta</button>
-        </div>
-        <div id="loginErrorMessage" class="text-red-500 text-sm text-center mt-4 min-h-[2rem]"></div>
-        <div class="mt-6 text-center text-gray-400 text-xs border-t pt-4"><i class="fas fa-database"></i> Dados protegidos no Firebase</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- PAINEL PRINCIPAL -->
-  <div id="appPanel" class="hidden min-h-screen bg-gray-50/90">
-    <header class="bg-white shadow-md sticky top-0 z-20 border-b border-green-100">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap justify-between items-center gap-3">
-        <div class="flex items-center gap-3"><div class="bg-green-100 p-2 rounded-full"><i class="fas fa-chart-line text-green-700 text-xl"></i></div><div><h1 class="text-xl font-extrabold text-gray-800">DataRecicla<span class="text-green-600 text-sm ml-1">📊</span></h1></div></div>
-        <div class="flex items-center gap-4">
-          <div class="hidden md:flex items-center bg-gray-100 rounded-full px-3 py-1.5 gap-2"><i class="far fa-building text-green-700"></i><span id="empresaNomeHeader" class="text-sm font-medium text-gray-700">Empresa</span></div>
-          <div class="flex items-center gap-2 bg-gray-50 rounded-full px-3 py-1.5"><i class="far fa-envelope text-gray-500"></i><span id="userEmailHeader" class="text-sm text-gray-700 truncate max-w-[150px]"></span></div>
-          <button id="logoutBtnGlobal" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-full transition flex items-center gap-1 text-sm font-medium"><i class="fas fa-sign-out-alt"></i> Sair</button>
-        </div>
-      </div>
-    </header>
-
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-7 flex flex-wrap justify-between items-center gap-4">
-        <div><p class="text-xs uppercase tracking-wide text-green-600 font-semibold"><i class="fas fa-industry mr-1"></i> Empresa de reciclagem</p><h2 id="companyNameDisplay" class="text-2xl md:text-3xl font-bold text-gray-800"></h2></div>
-        <button id="editCompanyBtn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl transition text-sm font-medium flex items-center gap-2"><i class="fas fa-pen-alt text-green-600"></i> Editar nome</button>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-4 gap-5 mb-7">
-        <div class="bg-white rounded-2xl shadow-sm p-4 flex items-center gap-4 border-l-8 border-green-500"><div class="bg-green-100 p-3 rounded-full"><i class="fas fa-weight-hanging text-green-700 text-xl"></i></div><div><p class="text-gray-500 text-sm font-medium">Total Coletado</p><p id="statTotalKg" class="text-2xl font-black text-gray-800">0 kg</p></div></div>
-        <div class="bg-white rounded-2xl shadow-sm p-4 flex items-center gap-4 border-l-8 border-emerald-500"><div class="bg-emerald-100 p-3 rounded-full"><i class="fas fa-boxes text-emerald-700 text-xl"></i></div><div><p class="text-gray-500 text-sm font-medium">Registros</p><p id="statTotalRecords" class="text-2xl font-black text-gray-800">0</p></div></div>
-        <div class="bg-white rounded-2xl shadow-sm p-4 flex items-center gap-4 border-l-8 border-blue-500"><div class="bg-blue-100 p-3 rounded-full"><i class="fas fa-dollar-sign text-blue-700 text-xl"></i></div><div><p class="text-gray-500 text-sm font-medium">Receita Total</p><p id="statReceitaTotal" class="text-2xl font-black text-gray-800">R$ 0,00</p></div></div>
-        <div class="bg-white rounded-2xl shadow-sm p-4 flex items-center gap-4 border-l-8 border-purple-500"><div class="bg-purple-100 p-3 rounded-full"><i class="fas fa-chart-line text-purple-700 text-xl"></i></div><div><p class="text-gray-500 text-sm font-medium">Lucro Estimado</p><p id="statLucroEstimado" class="text-2xl font-black text-gray-800">R$ 0,00</p></div></div>
-      </div>
-
-      <div class="bg-white rounded-2xl shadow-md p-5 mb-8 border border-gray-100">
-        <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 border-b pb-2"><i class="fas fa-truck-fast text-green-600"></i> Registrar nova coleta</h3>
-        <form id="formColeta" class="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <!-- Seção 1: Identificação -->
-          <div class="md:col-span-2 section-title"><i class="fas fa-id-card mr-2"></i> 1. Dados de Identificação</div>
-          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Origem do Resíduo</label><select id="origemResiduo" class="w-full border border-gray-300 rounded-xl px-3 py-2.5"><option value="">Selecione</option><option value="Residencial">Residencial</option><option value="Comercial">Comercial</option><option value="Industrial">Industrial</option><option value="Ecoponto">Ecoponto</option></select></div>
-          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Gerador (Empresa/Condomínio)</label><input type="text" id="gerador" class="w-full border border-gray-300 rounded-xl px-3 py-2.5"></div>
-          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Operador/Catador</label><input type="text" id="operadorCatador" class="w-full border border-gray-300 rounded-xl px-3 py-2.5"></div>
-          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Geolocalização (GPS)</label><div class="flex gap-2"><input type="text" id="gpsLat" placeholder="Latitude" class="w-1/2 border rounded-xl px-3 py-2.5"><input type="text" id="gpsLng" placeholder="Longitude" class="w-1/2 border rounded-xl px-3 py-2.5"><button type="button" id="getLocationBtn" class="bg-gray-200 px-3 rounded-xl"><i class="fas fa-map-marker-alt"></i></button></div></div>
-
-          <!-- Seção 2: Quantitativos -->
-          <div class="md:col-span-2 section-title mt-2"><i class="fas fa-chart-pie mr-2"></i> 2. Dados Quantitativos e Qualitativos</div>
-          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Peso Bruto (kg)</label><input type="number" step="0.01" id="pesoBruto" class="w-full border rounded-xl px-3 py-2.5"></div>
-          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Peso Líquido (kg) *</label><input type="number" step="0.01" id="pesoLiquido" class="w-full border rounded-xl px-3 py-2.5" required></div>
-          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Material *</label><select id="materialSelect" class="w-full border rounded-xl px-3 py-2.5"><option value="">Selecionar</option><option value="Plástico">Plástico</option><option value="Papel/Papelão">Papel/Papelão</option><option value="Vidro">Vidro</option><option value="Metal">Metal</option><option value="Eletrônicos">Eletrônicos</option><option value="Orgânico">Orgânico</option><option value="Outros">Outros</option></select></div>
-          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Subcategoria</label><select id="subcategoria" class="w-full border rounded-xl px-3 py-2.5"><option value="">Selecionar subcategoria</option></select></div>
-          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Índice de Rejeito (kg)</label><input type="number" step="0.01" id="indiceRejeito" class="w-full border rounded-xl px-3 py-2.5"></div>
-          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Volume Ocupação (%)</label><input type="number" step="1" id="volumeOcupacao" class="w-full border rounded-xl px-3 py-2.5"></div>
-
-          <!-- Seção 3: Logística -->
-          <div class="md:col-span-2 section-title mt-2"><i class="fas fa-truck mr-2"></i> 3. Dados Logísticos e Operacionais</div>
-          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Horário Início</label><input type="time" id="horaInicio" class="w-full border rounded-xl px-3 py-2.5"></div>
-          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Horário Término</label><input type="time" id="horaTermino" class="w-full border rounded-xl px-3 py-2.5"></div>
-          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Quilometragem (km)</label><input type="number" step="0.1" id="quilometragem" class="w-full border rounded-xl px-3 py-2.5"></div>
-          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Consumo Combustível (L)</label><input type="number" step="0.1" id="consumoCombustivel" class="w-full border rounded-xl px-3 py-2.5"></div>
-          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Frequência de Coleta</label><input type="text" id="frequenciaColeta" placeholder="Ex: 2x/semana" class="w-full border rounded-xl px-3 py-2.5"></div>
-
-          <!-- Seção 4: Financeiro e Conformidade -->
-          <div class="md:col-span-2 section-title mt-2"><i class="fas fa-chart-line mr-2"></i> 4. Dados Financeiros e de Conformidade</div>
-          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Preço de Venda (R$/kg)</label><input type="number" step="0.01" id="precoVenda" class="w-full border rounded-xl px-3 py-2.5"></div>
-          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Custo Operacional Unitário (R$/kg)</label><input type="number" step="0.01" id="custoOperacional" class="w-full border rounded-xl px-3 py-2.5"></div>
-          <div><label class="block text-gray-700 font-semibold text-sm mb-1">MTR (Manifesto)</label><input type="text" id="mtr" class="w-full border rounded-xl px-3 py-2.5"></div>
-          <div><label class="block text-gray-700 font-semibold text-sm mb-1">CDF (Certificado Destinação)</label><input type="text" id="cdf" class="w-full border rounded-xl px-3 py-2.5"></div>
-
-          <!-- Campos auxiliares -->
-          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Data da Coleta *</label><input type="date" id="dataColeta" class="w-full border rounded-xl px-3 py-2.5"></div>
-          <div><label class="block text-gray-700 font-semibold text-sm mb-1">Local (endereço)</label><input type="text" id="localColeta" class="w-full border rounded-xl px-3 py-2.5"></div>
-          <div class="md:col-span-2"><label class="block text-gray-700 font-semibold text-sm mb-1">Observações</label><textarea id="obsColeta" rows="2" class="w-full border rounded-xl px-3 py-2.5"></textarea></div>
-
-          <div class="md:col-span-2 flex gap-3">
-            <button type="submit" id="btnSubmitRecord" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-xl shadow-sm transition flex items-center gap-2 font-medium"><i class="fas fa-save"></i> Adicionar registro</button>
-            <button type="button" id="btnCancelEdit" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2.5 rounded-xl transition hidden items-center gap-2"><i class="fas fa-times-circle"></i> Cancelar edição</button>
-          </div>
-        </form>
-      </div>
-
-      <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100">
-        <div class="bg-gray-50 px-5 py-3 border-b flex justify-between items-center"><h3 class="font-bold text-gray-700"><i class="fas fa-database text-green-600 mr-2"></i> Histórico de coletas</h3><span class="text-xs text-gray-400">Clique na linha para ver detalhes</span></div>
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50 text-gray-600 text-xs uppercase font-semibold"><tr><th class="px-4 py-3 text-left">Gerador</th><th class="px-4 py-3 text-left">Material</th><th class="px-4 py-3 text-left">Peso Líq (kg)</th><th class="px-4 py-3 text-left">Data</th><th class="px-4 py-3 text-left">Local/Origem</th><th class="px-4 py-3 text-center">Ações</th></tr></thead>
-            <tbody id="tabelaRegistrosBody"></tbody>
-          </table>
-        </div>
-      </div>
-    </main>
-    <footer class="text-center text-gray-400 text-xs py-6 mt-4 border-t border-gray-200"><i class="fas fa-chart-line"></i> DataRecicla · Gestão completa com Firebase</footer>
-  </div>
 </body>
 </html>
