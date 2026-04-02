@@ -4,29 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Futuro Verde Reciclagem | Gestão de Coleta</title>
-  <!-- TailwindCSS + Font Awesome + Chart.js -->
+  <!-- TailwindCSS + Font Awesome + Chart.js + SheetJS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <!-- Custom CSS para ajustes finos -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
   <style>
     body {
       background: linear-gradient(135deg, #eef5ed 0%, #d4e3d1 100%);
       font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     }
-    /* Transições suaves */
-    .transition-smooth {
-      transition: all 0.2s ease-in-out;
-    }
-    /* Cards com hover sutil */
     .stat-card {
       transition: transform 0.2s, box-shadow 0.2s;
     }
     .stat-card:hover {
       transform: translateY(-3px);
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
     }
-    /* Seção de título */
     .section-title {
       background: #eaf7ea;
       border-left: 5px solid #2b7a3e;
@@ -36,24 +30,20 @@
       font-weight: 600;
       color: #1e4620;
     }
-    /* Botões de ação */
     .btn-action {
       transition: all 0.2s;
     }
     .btn-action:hover {
       transform: scale(1.02);
     }
-    /* Tabela responsiva */
     .table-row-hover:hover {
       background-color: #f9fafb;
     }
-    /* Input focus */
     input:focus, select:focus, textarea:focus {
       box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
       border-color: #2b7a3e;
       outline: none;
     }
-    /* Estilo para a logo (substitua por imagem futuramente) */
     .logo-placeholder {
       background-color: #e9f5e9;
       border-radius: 50%;
@@ -69,10 +59,6 @@
       background-color: #d4e6d4;
       transform: scale(1.02);
     }
-    /* Badges de período */
-    .period-badge {
-      transition: all 0.2s;
-    }
     .period-badge input:checked + span {
       background-color: #2b7a3e;
       color: white;
@@ -84,15 +70,14 @@
 
   <!-- Tela de login / cadastro -->
   <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
-    <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden transform transition-all">
+    <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden">
       <div class="bg-gradient-to-r from-green-700 to-emerald-600 px-6 py-8 text-center">
-        <!-- Logo pequena na tela de login -->
         <div class="flex justify-center mb-4">
           <div class="logo-placeholder bg-white/20 backdrop-blur-sm w-20 h-20 rounded-full flex items-center justify-center">
             <i class="fas fa-seedling text-4xl text-white"></i>
           </div>
         </div>
-        <h1 class="text-3xl font-bold text-white">DataRecicla</h1>
+        <h1 class="text-3xl font-bold text-white">Futuro Verde</h1>
         <p class="text-green-100 text-sm mt-1">Reciclagem · Sustentabilidade · Gestão</p>
       </div>
       <div class="p-7">
@@ -110,16 +95,14 @@
 
   <!-- APP PRINCIPAL -->
   <div id="appContainer" class="hidden">
-    <!-- Cabeçalho com logo -->
     <header class="bg-white/90 backdrop-blur-sm shadow-sm sticky top-0 z-20 border-b border-green-100">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap justify-between items-center gap-3">
         <div class="flex items-center gap-3">
-          <!-- Área da LOGO (substitua por <img> depois) -->
-          <div class="logo-placeholder w-10 h-10 sm:w-12 sm:h-12 cursor-pointer" title="Clique para trocar logo (futuramente)">
+          <div class="logo-placeholder w-10 h-10 sm:w-12 sm:h-12 cursor-pointer">
             <i class="fas fa-seedling text-green-700 text-xl sm:text-2xl"></i>
           </div>
           <div>
-            <h1 class="text-xl sm:text-2xl font-extrabold text-gray-800 tracking-tight">DataRecicla <span class="text-green-600 text-sm align-top">♻️</span></h1>
+            <h1 class="text-xl sm:text-2xl font-extrabold text-gray-800 tracking-tight">Futuro Verde <span class="text-green-600 text-sm align-top">♻️</span></h1>
             <p class="text-xs text-gray-500 hidden sm:block">Reciclagem inteligente</p>
           </div>
         </div>
@@ -138,7 +121,7 @@
     </header>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-      <!-- Tabs modernas -->
+      <!-- Tabs -->
       <div class="border-b border-gray-200 mb-8">
         <nav class="flex space-x-6" aria-label="Tabs">
           <button id="tabRegistro" class="tab-button py-3 px-1 border-b-2 border-green-600 text-green-700 font-semibold text-base transition-all">
@@ -153,9 +136,8 @@
         </nav>
       </div>
 
-      <!-- Painel Registro -->
+      <!-- Painel Registro (idêntico ao anterior) -->
       <div id="panelRegistro">
-        <!-- Cabeçalho da empresa -->
         <div class="bg-white rounded-2xl shadow-sm p-5 mb-7 flex flex-wrap justify-between items-center gap-4 border border-gray-100">
           <div>
             <p class="text-xs uppercase tracking-wide text-green-600 font-semibold"><i class="fas fa-recycle mr-1"></i> Empresa parceira</p>
@@ -167,7 +149,6 @@
           </div>
         </div>
 
-        <!-- Cards estatísticos -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-7">
           <div class="stat-card bg-white rounded-xl shadow-sm p-4 flex items-center gap-4 border-l-4 border-green-500">
             <div class="bg-green-100 p-3 rounded-full"><i class="fas fa-weight-hanging text-green-700 text-xl"></i></div>
@@ -187,7 +168,6 @@
           </div>
         </div>
 
-        <!-- Formulário principal -->
         <div class="bg-white rounded-2xl shadow-md p-5 md:p-6 border border-gray-100">
           <form id="formColeta" class="space-y-6">
             <!-- Seção 1 -->
@@ -263,7 +243,6 @@
           </form>
         </div>
 
-        <!-- Histórico de coletas -->
         <div class="bg-white rounded-2xl shadow-md overflow-hidden mt-8">
           <div class="bg-gray-50 px-5 py-3 border-b flex justify-between items-center">
             <h3 class="font-bold text-gray-700"><i class="fas fa-history text-green-600 mr-2"></i> Histórico de coletas</h3>
@@ -272,7 +251,7 @@
           <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gray-50 text-gray-600 text-xs font-semibold uppercase">
-                <tr><th class="px-4 py-3 text-left">Gerador</th><th class="px-4 py-3 text-left">Material</th><th class="px-4 py-3 text-left">Peso Líq</th><th class="px-4 py-3 text-left">Data</th><th class="px-4 py-3 text-left">Local/Origem</th><th class="px-4 py-3 text-center">Ações</th> </tr>
+                <tr><th class="px-4 py-3 text-left">Gerador</th><th class="px-4 py-3 text-left">Material</th><th class="px-4 py-3 text-left">Peso Líq</th><th class="px-4 py-3 text-left">Data</th><th class="px-4 py-3 text-left">Local/Origem</th><th class="px-4 py-3 text-center">Ações</th></tr>
               </thead>
               <tbody id="tabelaRegistrosBody" class="divide-y divide-gray-100 text-sm"></tbody>
             </table>
@@ -280,7 +259,7 @@
         </div>
       </div>
 
-      <!-- Painel Análise -->
+      <!-- Painel Análise (com botão Excel) -->
       <div id="panelAnalise" class="hidden">
         <div class="bg-white p-5 rounded-2xl shadow-sm mb-6 border border-gray-100">
           <h3 class="text-lg font-bold text-gray-800 mb-3">Filtrar por período</h3>
@@ -306,12 +285,22 @@
         </div>
 
         <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-          <div class="bg-gray-50 px-4 py-3 border-b"><h3 class="font-bold"><i class="fas fa-table mr-2 text-green-600"></i>Planilha de dados (período selecionado)</h3></div>
-          <div class="overflow-x-auto"><table class="min-w-full text-sm"><thead class="bg-gray-100"><tr><th class="p-3 text-left">Data</th><th class="p-3 text-left">Material</th><th class="p-3 text-left">Peso (kg)</th><th class="p-3 text-left">Receita (R$)</th><th class="p-3 text-left">Custo (R$)</th></tr></thead><tbody id="analiseTableBody"></tbody></table></div>
+          <div class="bg-gray-50 px-4 py-3 border-b flex justify-between items-center">
+            <h3 class="font-bold"><i class="fas fa-table mr-2 text-green-600"></i>Planilha de dados (período selecionado)</h3>
+            <button id="exportAnaliseBtn" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1 rounded-lg text-sm font-medium transition-all flex items-center gap-2"><i class="fas fa-file-excel"></i> Exportar para Excel</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+              <thead class="bg-gray-100">
+                <tr><th class="p-3 text-left">Data</th><th class="p-3 text-left">Material</th><th class="p-3 text-left">Peso (kg)</th><th class="p-3 text-left">Receita (R$)</th><th class="p-3 text-left">Custo (R$)</th></tr>
+              </thead>
+              <tbody id="analiseTableBody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-      <!-- Painel Rotas -->
+      <!-- Painel Rotas (com botão Excel) -->
       <div id="panelRotas" class="hidden">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
           <div class="bg-white p-4 rounded-xl shadow-sm"><p class="text-gray-500 text-sm">Distância total</p><p id="totalDistancia" class="text-2xl font-bold">0 km</p></div>
@@ -320,8 +309,18 @@
           <div class="bg-white p-4 rounded-xl shadow-sm"><p class="text-gray-500 text-sm">Eficiência média</p><p id="eficienciaMedia" class="text-2xl font-bold">0 L/km</p></div>
         </div>
         <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-          <div class="bg-gray-50 px-4 py-3 border-b"><h3 class="font-bold"><i class="fas fa-route mr-2 text-green-600"></i>Histórico de rotas e monitoramento</h3></div>
-          <div class="overflow-x-auto"><table class="min-w-full text-sm"><thead class="bg-gray-100"><tr><th class="p-3 text-left">Data</th><th class="p-3 text-left">Gerador</th><th class="p-3 text-left">GPS</th><th class="p-3 text-left">Distância (km)</th><th class="p-3 text-left">Combustível (L)</th><th class="p-3 text-left">Horário</th><th class="p-3 text-left">Custo (R$)</th></tr></thead><tbody id="rotasTableBody"></tbody></table></div>
+          <div class="bg-gray-50 px-4 py-3 border-b flex justify-between items-center">
+            <h3 class="font-bold"><i class="fas fa-route mr-2 text-green-600"></i>Histórico de rotas e monitoramento</h3>
+            <button id="exportRotasBtn" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1 rounded-lg text-sm font-medium transition-all flex items-center gap-2"><i class="fas fa-file-excel"></i> Exportar para Excel</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+              <thead class="bg-gray-100">
+                <tr><th class="p-3 text-left">Data</th><th class="p-3 text-left">Gerador</th><th class="p-3 text-left">GPS</th><th class="p-3 text-left">Distância (km)</th><th class="p-3 text-left">Combustível (L)</th><th class="p-3 text-left">Horário</th><th class="p-3 text-left">Custo (R$)</th></tr>
+              </thead>
+              <tbody id="rotasTableBody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </main>
@@ -349,7 +348,7 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // DOM elements
+    // DOM elements (como antes)
     const loginScreen = document.getElementById("loginScreen");
     const appContainer = document.getElementById("appContainer");
     const emailInput = document.getElementById("emailLoginInput");
@@ -362,7 +361,6 @@
     const companyNameSpan = document.getElementById("empresaNomeHeader");
     const companyDisplay = document.getElementById("companyNameDisplay");
 
-    // Tabs
     const tabRegistro = document.getElementById("tabRegistro");
     const tabAnalise = document.getElementById("tabAnalise");
     const tabRotas = document.getElementById("tabRotas");
@@ -370,7 +368,7 @@
     const panelAnalise = document.getElementById("panelAnalise");
     const panelRotas = document.getElementById("panelRotas");
 
-    // Form fields
+    // Form fields (os mesmos)
     const formColeta = document.getElementById("formColeta");
     const origemResiduo = document.getElementById("origemResiduo");
     const gerador = document.getElementById("gerador");
@@ -410,6 +408,7 @@
     let editRecordId = null;
     let pieChart = null, barChart = null;
 
+    // Funções auxiliares (subcategorias, etc.) - mesmas do código anterior
     function getSubcategorias(material) {
       const map = {
         "Plástico": ["PET", "PEAD", "PEBD", "PP", "PVC", "Outros Plásticos"],
@@ -484,7 +483,7 @@
       statLucroEstimado.innerHTML = `R$ ${(receita - custo).toFixed(2)}`;
 
       if (!records.length) {
-        tabelaRegistros.innerHTML = `早点<td colspan="6" class="text-center py-10 text-gray-400"><i class="fas fa-leaf"></i> Nenhuma coleta registrada. Comece agora!早点</tr>`;
+        tabelaRegistros.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-gray-400"><i class="fas fa-leaf"></i> Nenhuma coleta registrada. Comece agora!</td></tr>`;
         return;
       }
       tabelaRegistros.innerHTML = "";
@@ -646,7 +645,6 @@ MTR: ${rec.mtr || "—"} | CDF: ${rec.cdf || "—"}
       if (!currentUser) return;
       const data = await loadEmpresaData(currentUser.uid);
       currentRecords = data.records || [];
-      const profile = data.profile;
       userEmailSpan.innerText = currentUser.email;
       companyNameSpan.innerText = "Futuro Verde Reciclagem";
       companyDisplay.innerHTML = `<span class="text-green-600">Futuro Verde Reciclagem</span>`;
@@ -656,7 +654,6 @@ MTR: ${rec.mtr || "—"} | CDF: ${rec.cdf || "—"}
     }
 
     function getDateFilter(period) {
-      const now = new Date();
       if (period === '1m') { const d = new Date(); d.setMonth(d.getMonth() - 1); return d; }
       else if (period === '6m') { const d = new Date(); d.setMonth(d.getMonth() - 6); return d; }
       else if (period === '1y') { const d = new Date(); d.setFullYear(d.getFullYear() - 1); return d; }
@@ -695,7 +692,14 @@ MTR: ${rec.mtr || "—"} | CDF: ${rec.cdf || "—"}
 
       const tbody = document.getElementById("analiseTableBody");
       tbody.innerHTML = "";
-      filtered.forEach(r => { const row = tbody.insertRow(); row.insertCell(0).innerText = r.dataColeta || "—"; row.insertCell(1).innerText = r.material; row.insertCell(2).innerText = (r.pesoLiquido || 0).toFixed(2); row.insertCell(3).innerText = `R$ ${((r.precoVenda || 0) * (r.pesoLiquido || 0)).toFixed(2)}`; row.insertCell(4).innerText = `R$ ${((r.custoOperacional || 0) * (r.pesoLiquido || 0)).toFixed(2)}`; });
+      filtered.forEach(r => {
+        const row = tbody.insertRow();
+        row.insertCell(0).innerText = r.dataColeta || "—";
+        row.insertCell(1).innerText = r.material;
+        row.insertCell(2).innerText = (r.pesoLiquido || 0).toFixed(2);
+        row.insertCell(3).innerText = `R$ ${((r.precoVenda || 0) * (r.pesoLiquido || 0)).toFixed(2)}`;
+        row.insertCell(4).innerText = `R$ ${((r.custoOperacional || 0) * (r.pesoLiquido || 0)).toFixed(2)}`;
+      });
     }
 
     function renderRotas() {
@@ -721,6 +725,43 @@ MTR: ${rec.mtr || "—"} | CDF: ${rec.cdf || "—"}
       const eficiencia = totalDist > 0 ? (totalFuel / totalDist).toFixed(2) : 0;
       document.getElementById("eficienciaMedia").innerText = `${eficiencia} L/km`;
     }
+
+    // Export functions
+    function exportAnaliseToExcel() {
+      const period = document.querySelector('input[name="periodo"]:checked')?.value || '1m';
+      const filtered = filterRecordsByPeriod(period);
+      const data = filtered.map(r => ({
+        Data: r.dataColeta || "",
+        Material: r.material || "",
+        "Peso (kg)": (r.pesoLiquido || 0).toFixed(2),
+        "Receita (R$)": ((r.precoVenda || 0) * (r.pesoLiquido || 0)).toFixed(2),
+        "Custo (R$)": ((r.custoOperacional || 0) * (r.pesoLiquido || 0)).toFixed(2)
+      }));
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Analise_Dados");
+      XLSX.writeFile(wb, `analise_${period}.xlsx`);
+    }
+
+    function exportRotasToExcel() {
+      const data = currentRecords.map(r => ({
+        Data: r.dataColeta || "",
+        Gerador: r.gerador || "",
+        GPS: (r.gpsLat && r.gpsLng) ? `${r.gpsLat}, ${r.gpsLng}` : "",
+        "Distância (km)": (r.quilometragem || 0).toFixed(1),
+        "Combustível (L)": (r.consumoCombustivel || 0).toFixed(1),
+        Horário: (r.horaInicio && r.horaTermino) ? `${r.horaInicio} - ${r.horaTermino}` : "",
+        "Custo (R$)": ((r.custoOperacional || 0) * (r.pesoLiquido || 0)).toFixed(2)
+      }));
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Rotas_Monitoramento");
+      XLSX.writeFile(wb, "rotas.xlsx");
+    }
+
+    // Attach export buttons
+    document.getElementById("exportAnaliseBtn").addEventListener("click", exportAnaliseToExcel);
+    document.getElementById("exportRotasBtn").addEventListener("click", exportRotasToExcel);
 
     // Tab handling
     tabRegistro.addEventListener("click", () => {
